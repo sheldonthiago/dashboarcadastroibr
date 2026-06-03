@@ -265,13 +265,10 @@ function bootstrap() {
   }
   // Busca via API do GitHub (sem cache) para garantir dado sempre atualizado
   const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
-  fetch(apiUrl, {
-    headers: {
-      'Accept': 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Cache-Control': 'no-cache'
-    }
-  })
+  const bToken = (tryLS(LS_TOKEN) || '').trim();
+  const bHeaders = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Cache-Control': 'no-cache' };
+  if (bToken) bHeaders['Authorization'] = 'Bearer ' + bToken;
+  fetch(apiUrl, { headers: bHeaders })
     .then(r => { if (!r.ok) throw 0; return r.json(); })
     .then(info => {
       // conteúdo vem em base64
@@ -288,8 +285,18 @@ function bootstrap() {
       showDashboard();
     })
     .catch(() => {
-      document.getElementById('loading').textContent = 'Nenhum dado. Faça upload do .xlsx.';
-      openUpload();
+      // fallback: tenta o data.json estático do Pages
+      fetch('data.json?_=' + Date.now())
+        .then(r => { if (!r.ok) throw 0; return r.json(); })
+        .then(json => {
+          allData = json.rows;
+          setHeader('Atualizado: ' + json.updated, 'base');
+          showDashboard();
+        })
+        .catch(() => {
+          document.getElementById('loading').textContent = 'Nenhum dado. Faça upload do .xlsx.';
+          openUpload();
+        });
     });
 }
 
