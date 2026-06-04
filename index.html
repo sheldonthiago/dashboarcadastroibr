@@ -166,6 +166,15 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
       <button class="btn btn-red" onclick="clearTok()">Apagar</button>
     </div>
     <div id="tokStatus" style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center"></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem 0">
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">Limpar dados locais</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Remove os dados salvos no navegador. Útil para recomeçar do zero ou forçar recarga do GitHub.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="clearData('fotos')">🗑 Cadastro</button>
+      <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="clearData('vendas')">🗑 Vendas</button>
+      <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="clearData('canceladas')">🗑 Canceladas</button>
+      <button class="btn btn-red" style="font-size:12px;padding:6px 12px" onclick="clearData('all')">🗑 Tudo</button>
+    </div>
   </div>
 </div>
 
@@ -706,6 +715,27 @@ function procFile(file){
   r.readAsArrayBuffer(file);
 }
 
+
+/* ── MERGE: acrescenta novos dados sem substituir os existentes ── */
+function mergeDaily(existing, incoming){
+  // usa _key se disponível (d|canal para vendas), senão só d
+  const map={};
+  existing.forEach(r=>map[r._key||r.d]={...r});
+  incoming.forEach(r=>map[r._key||r.d]={...r});
+  return Object.values(map)
+    .map(r=>{const o={...r};delete o._key;return o;})
+    .sort((a,b)=>toTs(a.d)-toTs(b.d));
+}
+
+function mergeProds(existing, incoming){
+  // produtos: usa chave d+prod para deduplicar
+  // incoming tem prioridade (versão mais nova do mesmo item no mesmo dia)
+  const map=new Map();
+  existing.forEach(r=>map.set(r.d+'|'+r.prod,r));
+  incoming.forEach(r=>map.set(r.d+'|'+r.prod,r));
+  return [...map.values()].sort((a,b)=>toTs(b.d)-toTs(a.d));
+}
+
 function procFotos(rows){
   const keys=Object.keys(rows[0]||{});
   const cD=keys.find(k=>/data.*cria/i.test(k))||keys[2];
@@ -724,12 +754,18 @@ function procFotos(rows){
     if(foto==='SIM')map[key].sim++;
     prods.push({d:key,prod:String(r[cP]||'').trim(),foto,marca:String(r[cM]||'').trim(),modelo:String(r[cMo]||'').trim()});
   });
-  const daily=Object.values(map).sort((a,b)=>a.ts-b.ts);
+  const newDaily=Object.values(map).sort((a,b)=>a.ts-b.ts);
   const now=ts();
-  const obj={rows:daily,produtos:prods,updated:now};
-  setLS(LS_F,obj);pendPub.fotos=obj;fotosDaily=daily;fotosProds=prods;
+  // merge com dados existentes
+  const prevF=tryLS(LS_F);
+  const mergedDaily=mergeDaily(prevF?prevF.rows:[],newDaily);
+  const mergedProds=mergeProds(prevF?prevF.produtos||[]:[],prods);
+  const obj={rows:mergedDaily,produtos:mergedProds,updated:now};
+  setLS(LS_F,obj);pendPub.fotos=obj;fotosDaily=mergedDaily;fotosProds=mergedProds;
   setHdr('Atualizado: '+now,'local');setP(100,'Concluído!');
-  setTimeout(()=>{closeUpload();clickDiaF=null;initF();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Fotos carregadas!',false,3500);},400);
+  const addedF=newDaily.length;const prevDaysF=prevF?prevF.rows.length:0;
+  const newDaysF=mergedDaily.length-prevDaysF;
+  setTimeout(()=>{closeUpload();clickDiaF=null;initF();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Cadastro: +'+addedF+' dias mesclados (total '+mergedDaily.length+')',false,4000);},400);
 }
 
 function procVendas(rows){
@@ -767,13 +803,20 @@ function procVendas(rows){
     prods.push({d:key,canal:local,prod:String(r[cP]||'').trim(),val:n(r[cVl]),desc:n(r[cDc]),tot,ts:tsVal});
   });
   // ordena produtos por data
+  const newDaily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
   prods.sort((a,b)=>b.ts-a.ts);
-  const daily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
   const now=ts();
-  const obj={rows:daily,produtos:prods,updated:now};
-  setLS(LS_V,obj);pendPub.vendas=obj;vendasDaily=daily;vendasProds=prods;
+  // merge com dados existentes
+  const prevV=tryLS(LS_V);
+  const mergedDaily=mergeDaily(
+    (prevV?prevV.rows:[]).map(r=>({...r,_key:r.d+'|'+r.canal})),
+    newDaily.map(r=>({...r,_key:r.d+'|'+r.canal}))
+  );
+  const mergedProds=mergeProds(prevV?prevV.produtos||[]:[],prods);
+  const obj={rows:mergedDaily,produtos:mergedProds,updated:now};
+  setLS(LS_V,obj);pendPub.vendas=obj;vendasDaily=mergedDaily;vendasProds=mergedProds;
   setP(100,'Concluído!');
-  setTimeout(()=>{closeUpload();clickDiaV=null;clickCanalV=null;initV();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Vendas carregadas!',false,3500);},400);
+  setTimeout(()=>{closeUpload();clickDiaV=null;clickCanalV=null;initV();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Vendas: '+mergedProds.length+' itens no total',false,4000);},400);
 }
 
 const ts=()=>new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -864,6 +907,18 @@ async function publishGH(){
 }
 
 /* ── TOKEN ── */
+
+function clearData(type){
+  const labels={fotos:'dados de Cadastro',vendas:'dados de Vendas',canceladas:'dados de Canceladas',all:'TODOS os dados locais'};
+  if(!confirm('Apagar '+labels[type]+'? Isso não afeta o GitHub.')) return;
+  if(type==='fotos'||type==='all'){ delLS(LS_F); fotosDaily=[]; fotosProds=[]; }
+  if(type==='vendas'||type==='all'){ delLS(LS_V); vendasDaily=[]; vendasProds=[]; }
+  if(type==='canceladas'||type==='all'){ delLS(LS_C); cancelDaily=[]; cancelProds=[]; }
+  pendPub={};
+  showToast('✓ Dados locais limpos. Recarregue a página.');
+  closeToken();
+}
+
 function updTokUI(){const t=tryLS(LS_T);const s=document.getElementById('tokStatus');if(s)s.textContent=t?'✓ Token salvo':'Sem token configurado';}
 function saveTok(){const v=document.getElementById('tokInput').value.trim();if(!v){alert('Digite o token.');return;}setLS(LS_T,v);document.getElementById('tokInput').value='';showToast('✓ Token salvo');updTokUI();setTimeout(closeToken,600);}
 function clearTok(){if(!confirm('Apagar token?'))return;delLS(LS_T);updTokUI();showToast('Token removido',true);}
@@ -1066,13 +1121,20 @@ function procCanceladas(rows){
     map[key][local].total=Math.round((map[key][local].total+tot)*100)/100;
     prods.push({d:key,canal:local,prod:String(r[cP]||'').trim(),val:n(r[cVl]),desc:n(r[cDc]),tot,ts:tsVal});
   });
+  const newDaily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
   prods.sort((a,b)=>b.ts-a.ts);
-  const daily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
   const now=ts();
-  const obj={rows:daily,produtos:prods,updated:now};
-  setLS(LS_C,obj);pendPub.canceladas=obj;cancelDaily=daily;cancelProds=prods;
+  // merge com dados existentes
+  const prevC=tryLS(LS_C);
+  const mergedDaily=mergeDaily(
+    (prevC?prevC.rows:[]).map(r=>({...r,_key:r.d+'|'+r.canal})),
+    newDaily.map(r=>({...r,_key:r.d+'|'+r.canal}))
+  );
+  const mergedProds=mergeProds(prevC?prevC.produtos||[]:[],prods);
+  const obj={rows:mergedDaily,produtos:mergedProds,updated:now};
+  setLS(LS_C,obj);pendPub.canceladas=obj;cancelDaily=mergedDaily;cancelProds=mergedProds;
   setP(100,'Concluído!');
-  setTimeout(()=>{closeUpload();initC();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Cancelamentos carregados!',false,3500);},400);
+  setTimeout(()=>{closeUpload();initC();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Canceladas: '+mergedProds.length+' itens no total',false,4000);},400);
 }
 
 boot();
