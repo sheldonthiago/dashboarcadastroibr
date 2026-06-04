@@ -360,7 +360,10 @@ async function ghLoad(file,hdrs,ok,fail){
   try{
     const r=await fetch(api,{headers:hdrs});if(!r.ok)throw 0;
     const i=await r.json();
-    ok(JSON.parse(decodeURIComponent(escape(atob(i.content.replace(/\n/g,''))))));
+    // decodifica base64 UTF-8 seguro
+      const b64=i.content.replace(/\n/g,'');
+      const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+      ok(JSON.parse(new TextDecoder().decode(bytes)));
   }catch{
     try{const r2=await fetch(file+'?_='+Date.now());if(!r2.ok)throw 0;ok(await r2.json());}
     catch{fail();}
@@ -783,29 +786,81 @@ function closePublish(){document.getElementById('ovPub').classList.remove('open'
 async function publishGH(){
   const tok=(tryLS(LS_T)||'').trim();
   if(!tok){closePublish();showToast('⚠ Configure o token (⚙)',true);openToken();return;}
-  const btn=document.getElementById('btnConfPub');const st=document.getElementById('pubStatus');
+  const btn=document.getElementById('btnConfPub');
+  const st=document.getElementById('pubStatus');
   btn.disabled=true;
-  const hdrs={'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+
+  // monta lista de arquivos pendentes
   const files=[];
-  if(pendPub.fotos) files.push({file:'data.json',data:pendPub.fotos});
-  if(pendPub.vendas) files.push({file:'vendas.json',data:pendPub.vendas});
+  if(pendPub.fotos)      files.push({file:'data.json',      data:pendPub.fotos});
+  if(pendPub.vendas)     files.push({file:'vendas.json',    data:pendPub.vendas});
   if(pendPub.canceladas) files.push({file:'canceladas.json',data:pendPub.canceladas});
-  if(!files.length){const d=tryLS(LS_F);if(d)files.push({file:'data.json',data:d});}
-  let ok=0;
+  // se nada pendente, republica o que está no localStorage
+  if(!files.length){
+    const df=tryLS(LS_F); if(df) files.push({file:'data.json',data:df});
+    const dv=tryLS(LS_V); if(dv) files.push({file:'vendas.json',data:dv});
+    const dc=tryLS(LS_C); if(dc) files.push({file:'canceladas.json',data:dc});
+  }
+  if(!files.length){
+    st.style.color='var(--amber)';st.textContent='⚠ Nenhum dado carregado para publicar.';
+    btn.disabled=false;return;
+  }
+
+  const hdrs={'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  let okCount=0;
+
   for(const item of files){
-    st.style.color='var(--muted)';st.textContent='⏳ Publicando '+item.file+'...';
+    st.style.color='var(--muted)';
+    st.textContent='⏳ ('+( files.indexOf(item)+1)+'/'+files.length+') Publicando '+item.file+'...';
     try{
       const api=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${item.file}`;
-      let sha=null;const gr=await fetch(api,{headers:hdrs});if(gr.ok){sha=(await gr.json()).sha;}
-      const content=btoa(unescape(encodeURIComponent(JSON.stringify(item.data))));
-      const pr=await fetch(api,{method:'PUT',headers:hdrs,body:JSON.stringify({message:'dashboard: '+item.file+' '+item.data.updated,content,...(sha?{sha}:{})})});
-      if(!pr.ok){throw new Error((await pr.json()).message);}
-      ok++;
-    }catch(err){st.style.color='var(--red)';st.textContent='✗ '+err.message;btn.disabled=false;return;}
+
+      // pega SHA atual (necessário para update)
+      let sha=null;
+      const gr=await fetch(api,{headers:hdrs});
+      if(gr.ok){ sha=(await gr.json()).sha; }
+      else if(gr.status!==404){
+        const e=await gr.json();
+        throw new Error('Erro ao ler '+item.file+': '+(e.message||gr.status));
+      }
+
+      // codifica JSON → base64 UTF-8 seguro (suporta acentos)
+      const jsonStr=JSON.stringify(item.data);
+      const encoded=new TextEncoder().encode(jsonStr);
+      let binary='';
+      // chunk para evitar stack overflow em arrays grandes
+      const CHUNK=8192;
+      for(let i=0;i<encoded.length;i+=CHUNK){
+        binary+=String.fromCharCode(...encoded.slice(i,i+CHUNK));
+      }
+      const b64=btoa(binary);
+
+      const body={
+        message:'dashboard: atualiza '+item.file+' — '+item.data.updated,
+        content:b64,
+        ...(sha?{sha}:{})
+      };
+
+      const pr=await fetch(api,{method:'PUT',headers:hdrs,body:JSON.stringify(body)});
+      if(!pr.ok){
+        const e=await pr.json();
+        throw new Error(e.message||'HTTP '+pr.status);
+      }
+      okCount++;
+    }catch(err){
+      st.style.color='var(--red)';
+      st.textContent='✗ Erro em '+item.file+': '+err.message;
+      btn.disabled=false;
+      return;
+    }
   }
-  st.style.color='var(--green)';st.textContent='✓ '+ok+' arquivo(s) publicado(s)!';
-  setHdr(ts(),'gh');pendPub={};document.getElementById('btnPub').style.display='none';
-  setTimeout(()=>{closePublish();showToast('✓ GitHub atualizado!');},700);
+
+  st.style.color='var(--green)';
+  st.textContent='✓ '+okCount+' arquivo(s) publicado(s) com sucesso!';
+  setHdr('Publicado: '+ts(),'gh');
+  pendPub={};
+  document.getElementById('btnPub').style.display='none';
+  setTimeout(()=>{closePublish();showToast('✓ GitHub atualizado!');},800);
 }
 
 /* ── TOKEN ── */
