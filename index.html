@@ -17,6 +17,7 @@
   --red:#f06060;--red-dim:rgba(240,96,96,0.12);
   --amber:#f0a030;--amber-dim:rgba(240,160,48,0.12);
   --blue:#5b9cf6;--blue-dim:rgba(91,156,246,0.12);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);
   --r:10px;--rl:16px;
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -92,6 +93,7 @@ tr:hover td{background:var(--surface2)}
 .badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
 .bg{background:var(--green-dim);color:var(--green)}.br{background:var(--red-dim);color:var(--red)}
 .ba{background:var(--amber-dim);color:var(--amber)}.bb{background:var(--blue-dim);color:var(--blue)}
+.bp{background:var(--purple-dim);color:var(--purple)}
 .prod-name{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pagination{display:flex;align-items:center;gap:6px;margin-top:1rem;justify-content:flex-end;flex-wrap:wrap}
 .pagination button{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
@@ -110,16 +112,18 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <div class="hright">
     <span class="lupdate" id="lastUpdate">carregando...</span>
     <span class="sbadge sb-base" id="srcBadge"></span>
-    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Cadastro</button>
-    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas Realizadas</button>
+    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Fotos</button>
+    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas</button>
+    <button class="btn btn-outline" onclick="openUpload('canceladas')">↑ Canceladas</button>
     <button class="btn btn-blue" id="btnPub" style="display:none" onclick="openPublish()">☁ Publicar</button>
     <button class="btn btn-outline" onclick="openToken()">⚙</button>
   </div>
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('fotos',this)">📷 Cadastro</button>
-  <button class="tab" onclick="switchTab('vendas',this)">💰 Vendas Realizadas</button>
+  <button class="tab active" onclick="switchTab('fotos',this)">📋 Cadastro</button>
+  <button class="tab" onclick="switchTab('vendas',this)">✅ Vendas Realizadas</button>
+  <button class="tab" onclick="switchTab('canceladas',this)">❌ Canceladas</button>
 </div>
 
 <!-- UPLOAD -->
@@ -249,11 +253,60 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   </div>
 
 </div>
+  <!-- ABA CANCELADAS -->
+  <div class="page" id="page-canceladas">
+    <div class="loading" id="loadC">Carregando...</div>
+    <div id="dashC" style="display:none">
+      <div class="kpi-grid" id="kpiC"></div>
+      <div class="controls">
+        <label>Mês:</label><select id="selMC"></select>
+        <label>Canal:</label>
+        <select id="selCanalC">
+          <option value="all">Todos</option>
+          <option value="Balcão">Balcão</option>
+          <option value="Mercado Livre">Mercado Livre</option>
+        </select>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchC" placeholder="Buscar produto..."></div>
+        <span id="activeFilterC" style="display:none"></span>
+        <span class="tag" id="tagC"></span>
+      </div>
+      <div class="two-col">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr">
+            <span class="card-title">Cancelamentos por dia (R$)</span>
+            <div class="legend"><span><span class="ldot" style="background:#f06060"></span>Balcão</span><span><span class="ldot" style="background:#a78bfa"></span>ML</span></div>
+          </div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="chartCD"></canvas></div>
+          <div class="chart-hint">Clique em uma barra para filtrar os produtos daquele dia</div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hdr"><span class="card-title">Por canal</span></div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="chartCC"></canvas></div>
+          <div class="chart-hint">Clique para filtrar por canal</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Produtos cancelados</span></div>
+        <div class="tw">
+          <table><thead><tr><th>Data</th><th>Produto</th><th>Canal</th><th>Valor</th><th>Desconto</th><th>Total</th></tr></thead>
+          <tbody id="tC"></tbody></table>
+        </div>
+        <div class="pagination" id="pagC"></div>
+      </div>
+    </div>
+    <div id="noDataC" style="display:none;text-align:center;padding:4rem 2rem">
+      <div style="font-size:48px;margin-bottom:1rem">❌</div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:8px">Nenhuma venda cancelada</div>
+      <div style="font-size:13px;color:var(--muted)">Faça upload do relatório de cancelamentos clicando em <strong>↑ Canceladas</strong></div>
+    </div>
+  </div>
+
+
 <footer>Sucatão do Major · sheldonthiago/dashboarcadastroibr</footer>
 
 <script>
 const GH_USER='sheldonthiago',GH_REPO='dashboarcadastroibr';
-const LS_F='sucatao_fotos_v2',LS_V='sucatao_vendas_v2',LS_T='sucatao_gh_token';
+const LS_F='sucatao_fotos_v2',LS_V='sucatao_vendas_v2',LS_C='sucatao_canc_v1',LS_T='sucatao_gh_token';
 const PER_PAGE=50;
 
 let fotosProds=[],fotosDaily=[];
@@ -261,8 +314,11 @@ let vendasProds=[],vendasDaily=[];
 let pendPub={};
 let cF=null,cVD=null,cVC=null;
 let upType='fotos';
-let pF=1,pV=1;
+let pF=1,pV=1,pC=1;
 
+let cancelProds=[],cancelDaily=[];
+let cCD=null,cCC=null;
+let clickDiaC=null,clickCanalC=null;
 // filtros dinâmicos (clique no gráfico)
 let clickDiaF=null; // data clicada no gráfico fotos
 let clickDiaV=null; // data clicada no gráfico vendas
@@ -293,6 +349,10 @@ async function boot(){
   const sv=tryLS(LS_V);
   if(sv){vendasDaily=sv.rows;vendasProds=sv.produtos||[];initV();}
   else await ghLoad('vendas.json',hdrs,d=>{vendasDaily=d.rows;vendasProds=d.produtos||[];initV();},()=>{document.getElementById('loadV').textContent='Nenhum dado. Faça upload do .xlsx.';});
+
+  const sc=tryLS(LS_C);
+  if(sc){cancelDaily=sc.rows;cancelProds=sc.produtos||[];initC();}
+  else await ghLoad('canceladas.json',hdrs,d=>{cancelDaily=d.rows;cancelProds=d.produtos||[];initC();},()=>{initCEmpty();});
 }
 
 async function ghLoad(file,hdrs,ok,fail){
@@ -620,8 +680,8 @@ function renderPag(id,total,cur,cb){
 /* ── UPLOAD ── */
 function openUpload(t){
   upType=t;
-  document.getElementById('upTitle').textContent=t==='fotos'?'Carregar estoque (fotos)':'Carregar relatório de vendas';
-  document.getElementById('upDesc').textContent=t==='fotos'?'Arquivo com colunas: Data de Criação, Produto, Foto (SIM/NÃO).':'Arquivo com colunas: Data, Produto, Local de Venda, Valor de Venda, Desconto, Valores Totais.';
+  document.getElementById('upTitle').textContent=t==='fotos'?'Carregar estoque (cadastro)':t==='vendas'?'Carregar relatório de vendas':'Carregar cancelamentos';
+  document.getElementById('upDesc').textContent=t==='fotos'?'Arquivo com colunas: Data de Criação, Produto, Foto (SIM/NÃO).':t==='vendas'?'Arquivo com colunas: Data, Produto, Local de Venda, Valor de Venda, Desconto, Valores Totais.':'Relatório de vendas canceladas com as mesmas colunas do relatório de vendas.';
   document.getElementById('pbf').style.width='0%';
   document.getElementById('pw').style.display='none';
   document.getElementById('ovUpload').classList.add('open');
@@ -637,7 +697,7 @@ function procFile(file){
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
       setP(65,'Processando...');
-      upType==='fotos'?procFotos(rows):procVendas(rows);
+      upType==='fotos'?procFotos(rows):upType==='vendas'?procVendas(rows):procCanceladas(rows);
     }catch(err){setP(0,'');alert('Erro: '+err.message);}
   };
   r.readAsArrayBuffer(file);
@@ -729,6 +789,7 @@ async function publishGH(){
   const files=[];
   if(pendPub.fotos) files.push({file:'data.json',data:pendPub.fotos});
   if(pendPub.vendas) files.push({file:'vendas.json',data:pendPub.vendas});
+  if(pendPub.canceladas) files.push({file:'canceladas.json',data:pendPub.canceladas});
   if(!files.length){const d=tryLS(LS_F);if(d)files.push({file:'data.json',data:d});}
   let ok=0;
   for(const item of files){
@@ -771,12 +832,193 @@ document.getElementById('selMF').addEventListener('change',()=>{clickDiaF=null;r
 document.getElementById('selFotoF').addEventListener('change',renderF);
 document.getElementById('searchF').addEventListener('input',renderF);
 document.getElementById('selMV').addEventListener('change',()=>{clickDiaV=null;clickCanalV=null;renderV();});
+document.getElementById('selMC').addEventListener('change',()=>{clickDiaC=null;clickCanalC=null;renderC();});
 document.getElementById('selCanal').addEventListener('change',()=>{clickCanalV=null;renderV();});
+document.getElementById('selCanalC').addEventListener('change',()=>{clickCanalC=null;renderC();});
 document.getElementById('searchV').addEventListener('input',renderV);
+document.getElementById('searchC').addEventListener('input',renderC);
 
 ['ovUpload','ovPub','ovToken'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)document.getElementById(id).classList.remove('open');});
 });
+
+
+/* ════════════════════════════════
+   ABA CANCELADAS
+════════════════════════════════ */
+function initC(){
+  document.getElementById('loadC').style.display='none';
+  document.getElementById('noDataC').style.display='none';
+  document.getElementById('dashC').style.display='block';
+  buildSel('selMC',[...new Set(cancelProds.map(r=>getMes(r.d)))]);
+  renderC();
+}
+
+function initCEmpty(){
+  document.getElementById('loadC').style.display='none';
+  document.getElementById('noDataC').style.display='block';
+}
+
+function renderC(){
+  const mes=document.getElementById('selMC').value;
+  const canal=document.getElementById('selCanalC').value;
+  const q=(document.getElementById('searchC').value||'').toLowerCase().trim();
+
+  let prods=cancelProds.filter(r=>{
+    if(mes!=='all'&&getMes(r.d)!==mes)return false;
+    if(canal!=='all'&&r.canal!==canal)return false;
+    if(q&&!r.prod.toLowerCase().includes(q))return false;
+    if(clickDiaC&&r.d!==clickDiaC)return false;
+    if(clickCanalC&&r.canal!==clickCanalC)return false;
+    return true;
+  });
+
+  const daily=cancelDaily.filter(r=>mes==='all'||getMes(r.d)===mes);
+
+  const totBal=prods.filter(r=>r.canal==='Balcão').reduce((a,r)=>a+r.tot,0);
+  const totML =prods.filter(r=>r.canal==='Mercado Livre').reduce((a,r)=>a+r.tot,0);
+  const totGeral=totBal+totML;
+  const dayMap={};daily.forEach(r=>{dayMap[r.d]=(dayMap[r.d]||0)+r.total;});
+  const worstD=Object.entries(dayMap).reduce((b,[d,v])=>v>b[1]?[d,v]:b,['—',0]);
+
+  renderKPI('kpiC',[
+    {l:'Total cancelado',  v:'R$ '+fmt(totGeral), s:'todos canais',                    c:'var(--red)'},
+    {l:'Balcão',           v:'R$ '+fmt(totBal),   s:pct(totBal,totGeral)+'% do total', c:'var(--red)'},
+    {l:'Mercado Livre',    v:'R$ '+fmt(totML),     s:pct(totML,totGeral)+'% do total', c:'var(--purple)'},
+    {l:'Maior cancelamento',v:'R$ '+fmt(worstD[1]),s:worstD[0],                        c:'var(--amber)'},
+    {l:'Itens cancelados', v:prods.length,         s:'no período',                     c:'var(--muted)'},
+  ]);
+
+  const dias=[...new Set(daily.map(r=>r.d))].sort((a,b)=>toTs(a)-toTs(b));
+  const dBal=dias.map(d=>daily.filter(r=>r.d===d&&r.canal==='Balcão').reduce((a,r)=>a+r.total,0));
+  const dML =dias.map(d=>daily.filter(r=>r.d===d&&r.canal==='Mercado Livre').reduce((a,r)=>a+r.total,0));
+
+  if(cCD)cCD.destroy();
+  cCD=new Chart(document.getElementById('chartCD'),{
+    type:'bar',
+    data:{labels:dias,datasets:[
+      {label:'Balcão',       data:dBal,backgroundColor:dias.map(d=>clickDiaC&&d!==clickDiaC?'rgba(240,96,96,0.25)':'#f06060'),borderRadius:3,borderSkipped:false},
+      {label:'Mercado Livre',data:dML, backgroundColor:dias.map(d=>clickDiaC&&d!==clickDiaC?'rgba(167,139,250,0.25)':'#a78bfa'),borderRadius:3,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',
+        callbacks:{label:ctx=>ctx.dataset.label+': R$ '+fmt(ctx.raw)}}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#666',font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:26},grid:{color:'rgba(255,255,255,.04)'}},
+        y:{stacked:true,ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}
+      },
+      onClick:(evt)=>{
+        const pts=cCD.getElementsAtEventForMode(evt,'index',{intersect:false},true);
+        if(!pts.length)return;
+        const dia=dias[pts[0].index];
+        if(clickDiaC===dia){clickDiaC=null;}else{clickDiaC=dia;clickCanalC=null;}
+        updFilterBadgeC();renderC();
+      }
+    }
+  });
+
+  const balFull=daily.filter(r=>r.canal==='Balcão').reduce((a,r)=>a+r.total,0);
+  const mlFull =daily.filter(r=>r.canal==='Mercado Livre').reduce((a,r)=>a+r.total,0);
+  const totFull=balFull+mlFull;
+
+  if(cCC)cCC.destroy();
+  cCC=new Chart(document.getElementById('chartCC'),{
+    type:'doughnut',
+    data:{labels:['Balcão','Mercado Livre'],datasets:[{
+      data:[balFull,mlFull],
+      backgroundColor:[
+        clickCanalC&&clickCanalC!=='Balcão'       ?'rgba(240,96,96,0.25)':'#f06060',
+        clickCanalC&&clickCanalC!=='Mercado Livre' ?'rgba(167,139,250,0.25)':'#a78bfa'
+      ],
+      borderWidth:0,hoverOffset:4
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#888',font:{size:12},padding:14}},
+        tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',
+          callbacks:{label:ctx=>' R$ '+fmt(ctx.raw)+' ('+pct(ctx.raw,totFull)+'%)'}}
+      },
+      onClick:(evt)=>{
+        const pts=cCC.getElementsAtEventForMode(evt,'nearest',{intersect:true},true);
+        if(!pts.length)return;
+        const label=cCC.data.labels[pts[0].index];
+        if(clickCanalC===label){clickCanalC=null;}else{clickCanalC=label;clickDiaC=null;document.getElementById('selCanalC').value='all';}
+        updFilterBadgeC();renderC();
+      }
+    }
+  });
+
+  updFilterBadgeC();
+  pC=1;
+  document.getElementById('tagC').textContent=prods.length+' itens';
+  renderPageC(prods);
+}
+
+function updFilterBadgeC(){
+  const el=document.getElementById('activeFilterC');
+  if(clickDiaC||clickCanalC){
+    el.style.display='inline-flex';el.className='active-filter';
+    const txt=clickDiaC?('📅 '+clickDiaC):(clickCanalC==='Balcão'?'🏪 Balcão':'🛒 Mercado Livre');
+    el.innerHTML=txt+' <span>×</span>';
+    el.onclick=()=>{clickDiaC=null;clickCanalC=null;updFilterBadgeC();renderC();};
+  } else { el.style.display='none'; }
+}
+
+function renderPageC(prods){
+  const slice=prods.slice((pC-1)*PER_PAGE,pC*PER_PAGE);
+  document.getElementById('tC').innerHTML=slice.map(r=>`
+    <tr>
+      <td class="num">${r.d}</td>
+      <td class="prod-name" title="${esc(r.prod)}">${esc(r.prod)||'—'}</td>
+      <td><span class="badge ${r.canal==='Balcão'?'br':'bp'}">${r.canal==='Mercado Livre'?'ML':r.canal}</span></td>
+      <td class="num">R$ ${fmt(r.val)}</td>
+      <td class="num" style="color:${r.desc>0?'var(--amber)':'var(--muted)'}">R$ ${fmt(r.desc)}</td>
+      <td class="num" style="color:var(--red)">R$ ${fmt(r.tot)}</td>
+    </tr>`).join('');
+  renderPag('pagC',prods.length,pC,p=>{pC=p;renderPageC(prods);});
+}
+
+function procCanceladas(rows){
+  const keys=Object.keys(rows[0]||{});
+  const cD  =keys.find(k=>/^data$/i.test(k))||'Data';
+  const cL  =keys.find(k=>/local.*venda/i.test(k))||'Local de Venda';
+  const cP  =keys.find(k=>/^produto$/i.test(k))||'Produto';
+  const cVl =keys.find(k=>/^valor de venda$/i.test(k))||'Valor de Venda';
+  const cDc =keys.find(k=>/^desconto$/i.test(k))||'Desconto';
+  const cT  =keys.find(k=>/valores.*totais/i.test(k))||'Valores Totais';
+
+  const n=s=>parseFloat(String(s||'0').replace(/\./g,'').replace(',','.'))||0;
+  const map={};const prods=[];
+  rows.forEach(r=>{
+    const local=String(r[cL]||'').trim();
+    if(!local||local==='nan'||local==='NaN')return;
+    const raw=r[cD];if(!raw)return;
+    let key,tsVal;
+    if(raw instanceof Date){
+      key=raw.toLocaleDateString('pt-BR');tsVal=raw.getTime();
+    } else {
+      const s=String(raw).trim();
+      if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){
+        key=s;const[dd,mm,yy]=s.split('/');tsVal=new Date(+yy,+mm-1,+dd,12,0,0).getTime();
+      } else {
+        const dt2=new Date(s);if(isNaN(dt2))return;
+        key=dt2.toLocaleDateString('pt-BR');tsVal=dt2.getTime();
+      }
+    }
+    if(!map[key])map[key]={};
+    if(!map[key][local])map[key][local]={d:key,canal:local,total:0,ts:tsVal};
+    const tot=n(r[cT]);
+    map[key][local].total=Math.round((map[key][local].total+tot)*100)/100;
+    prods.push({d:key,canal:local,prod:String(r[cP]||'').trim(),val:n(r[cVl]),desc:n(r[cDc]),tot,ts:tsVal});
+  });
+  prods.sort((a,b)=>b.ts-a.ts);
+  const daily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
+  const now=ts();
+  const obj={rows:daily,produtos:prods,updated:now};
+  setLS(LS_C,obj);pendPub.canceladas=obj;cancelDaily=daily;cancelProds=prods;
+  setP(100,'Concluído!');
+  setTimeout(()=>{closeUpload();initC();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Cancelamentos carregados!',false,3500);},400);
+}
 
 boot();
 </script>
