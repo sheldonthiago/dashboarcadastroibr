@@ -6,7 +6,6 @@
 <title>Sucatão do Major — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -18,94 +17,95 @@
   --red:#f06060;--red-dim:rgba(240,96,96,0.12);
   --amber:#f0a030;--amber-dim:rgba(240,160,48,0.12);
   --blue:#5b9cf6;--blue-dim:rgba(91,156,246,0.12);
-  --radius:10px;--radius-lg:16px
+  --r:10px;--rl:16px;
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:var(--bg);gap:1rem;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;letter-spacing:-.3px}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;letter-spacing:-0.3px}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-.hright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lupdate{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;font-family:'DM Sans',sans-serif}
-.btn-green{background:var(--green);color:#0a1a12}
-.btn-blue{background:var(--blue);color:#05112b}
-.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
-.btn-red{background:var(--red);color:#1a0505}
-.btn:hover{opacity:.8}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.tabs{display:flex;gap:4px;padding:0 2rem;border-bottom:1px solid var(--border);background:var(--bg)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;font-family:'DM Sans',sans-serif}
+.btn-green{background:var(--green);color:#0a1a12}.btn-blue{background:var(--blue);color:#05112b}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}.btn-red{background:var(--red);color:#fff}
+.btn:hover{opacity:.8}.btn:disabled{opacity:.4;cursor:not-allowed}
+/* TABS */
+.tabs{display:flex;gap:2px;padding:0 2rem;border-bottom:1px solid var(--border);background:var(--bg)}
 .tab{padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:'DM Sans',sans-serif}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--text);border-bottom-color:var(--green)}
+.tab:hover{color:var(--text)}.tab.active{color:var(--text);border-bottom-color:var(--green)}
+/* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;max-width:460px;width:90%;position:relative}
-.modal h3{font-size:16px;font-weight:600;margin-bottom:6px}
-.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
-.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
-.dropzone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:1.75rem;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:14px;text-align:center}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:2rem;max-width:460px;width:90%;position:relative}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:6px}.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.mclose{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+.dropzone{border:1.5px dashed var(--border2);border-radius:var(--r);padding:1.75rem;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:14px;text-align:center}
 .dropzone:hover,.dropzone.drag{border-color:var(--green);background:var(--green-dim)}
 .dropzone p{font-size:13px;color:var(--muted);margin:0}
-.file-input{display:none}
-.pbar-wrap{display:none;margin-top:12px}
-.pbar-bg{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden}
-.pbar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s;width:0%}
+.fi{display:none}
+.pw{display:none;margin-top:12px}
+.pb-bg{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden}
+.pb-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s;width:0%}
 .plabel{font-size:12px;color:var(--muted);margin-top:6px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
+.field{margin-bottom:14px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
 .field input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:'DM Mono',monospace;outline:none}
 .field input:focus{border-color:var(--green)}
-.field-hint{font-size:11px;color:var(--muted);margin-top:4px}
-.field-hint a{color:var(--blue)}
-#publishStatus{font-size:13px;margin-top:12px;min-height:20px;text-align:center}
-#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;z-index:300;transition:transform .3s ease;white-space:nowrap;background:var(--green);color:#0a1a12}
-#toast.show{transform:translateX(-50%) translateY(0)}
-#toast.error{background:var(--red);color:#fff}
+.fhint{font-size:11px;color:var(--muted);margin-top:4px}.fhint a{color:var(--blue)}
+#pubStatus{font-size:13px;margin-top:12px;min-height:20px;text-align:center}
+/* TOAST */
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;z-index:300;transition:transform .3s;white-space:nowrap;background:var(--green);color:#0a1a12}
+#toast.show{transform:translateX(-50%) translateY(0)}#toast.err{background:var(--red);color:#fff}
+/* BADGE SOURCE */
 .sbadge{font-size:11px;padding:3px 10px;border-radius:5px;font-weight:500}
-.sb-base{background:var(--amber-dim);color:var(--amber)}
-.sb-local{background:var(--green-dim);color:var(--green)}
-.sb-gh{background:var(--blue-dim);color:var(--blue)}
-#main{padding:2rem;max-width:1300px;margin:0 auto}
-.page{display:none}
-.page.active{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.75rem}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--green))}
+.sb-base{background:var(--amber-dim);color:var(--amber)}.sb-local{background:var(--green-dim);color:var(--green)}.sb-gh{background:var(--blue-dim);color:var(--blue)}
+/* MAIN */
+#main{padding:2rem;max-width:1280px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:2rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--green))}
 .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px}
-.kpi-val{font-size:24px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-1px;color:var(--kpi-color,var(--text))}
+.kpi-val{font-size:24px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-1px;color:var(--kc,var(--text))}
 .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px}
-.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:1.25rem}
+/* CONTROLS */
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem}
 .controls label{font-size:13px;color:var(--muted)}
-select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:7px 12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
+select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:6px 11px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
 select:focus{border-color:var(--green)}
-.tag{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;background:var(--green-dim);color:var(--green)}
-.search-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:7px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;min-width:200px}
-.search-input:focus{border-color:var(--green)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.tag{padding:3px 10px;border-radius:6px;font-size:12px;font-weight:500;background:var(--green-dim);color:var(--green)}
+/* SEARCH */
+.search-wrap{position:relative;flex:1;max-width:300px}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:6px 11px 6px 32px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.search-wrap input:focus{border-color:var(--green)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.5rem}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
 .card-title{font-size:14px;font-weight:500}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
 @media(max-width:700px){.two-col{grid-template-columns:1fr}}
-.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px}
 .ldot{width:8px;height:8px;border-radius:2px}
+/* TABLE */
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:9px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap}
-td{padding:8px 12px;border-bottom:1px solid var(--border)}
+th{text-align:left;padding:9px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap}
+td{padding:8px 13px;border-bottom:1px solid var(--border);color:var(--text)}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--surface2)}
 .num{font-family:'DM Mono',monospace}
 .badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
-.b-green{background:var(--green-dim);color:var(--green)}
-.b-amber{background:var(--amber-dim);color:var(--amber)}
-.b-red{background:var(--red-dim);color:var(--red)}
-.b-blue{background:var(--blue-dim);color:var(--blue)}
-.pagination{display:flex;align-items:center;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap}
-.pagination button{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
-.pagination button:hover{border-color:var(--green)}
-.pagination button.active{background:var(--green);color:#0a1a12;border-color:var(--green)}
-.pagination button:disabled{opacity:.3;cursor:not-allowed}
+.bg{background:var(--green-dim);color:var(--green)}.br{background:var(--red-dim);color:var(--red)}
+.ba{background:var(--amber-dim);color:var(--amber)}.bb{background:var(--blue-dim);color:var(--blue)}
+.prod-name{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:8px;margin-top:1rem;justify-content:flex-end;flex-wrap:wrap}
+.pagination button{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.pagination button:hover{border-color:var(--green)}.pagination button.cur{border-color:var(--green);color:var(--green)}
+.pagination button:disabled{opacity:.35;cursor:not-allowed}
 .pinfo{font-size:12px;color:var(--muted)}
 .loading{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:14px}
 footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-top:1px solid var(--border);margin-top:1rem}
@@ -113,238 +113,413 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo"><span class="logo-dot"></span>Sucatão do Major</div>
   <div class="hright">
     <span class="lupdate" id="lastUpdate">carregando...</span>
-    <span class="sbadge sb-base" id="sourceBadge"></span>
-    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Cadastro</button>
-    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas Realizadas</button>
-    <button class="btn btn-blue" id="btnPublish" style="display:none" onclick="openPublish()">☁ Publicar</button>
-    <button class="btn btn-outline" onclick="openToken()" title="Token GitHub">⚙</button>
+    <span class="sbadge sb-base" id="srcBadge"></span>
+    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Fotos</button>
+    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas</button>
+    <button class="btn btn-blue" id="btnPub" style="display:none" onclick="openPublish()">☁ Publicar</button>
+    <button class="btn btn-outline" onclick="openToken()">⚙</button>
   </div>
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('fotos',this)">📷 Cadastro</button>
-  <button class="tab" onclick="switchTab('vendas',this)">💰 Vendas Realizadas</button>
+  <button class="tab active" onclick="switchTab('fotos',this)">📷 Fotos</button>
+  <button class="tab" onclick="switchTab('vendas',this)">💰 Vendas</button>
 </div>
 
 <!-- UPLOAD -->
-<div class="overlay" id="uploadOverlay">
+<div class="overlay" id="ovUpload">
   <div class="modal">
-    <button class="modal-close" onclick="closeUpload()">×</button>
-    <h3 id="uploadTitle">Carregar relatório</h3>
-    <p id="uploadDesc">Selecione o arquivo .xlsx.</p>
-    <div class="dropzone" id="dz"><p>Arraste o arquivo .xlsx aqui<br>ou clique para selecionar</p></div>
-    <label class="btn btn-green" for="fileInput" style="display:block;text-align:center">Selecionar arquivo .xlsx</label>
-    <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
-    <div class="pbar-wrap" id="pbarWrap">
-      <div class="pbar-bg"><div class="pbar-fill" id="pFill"></div></div>
-      <div class="plabel" id="pLabel"></div>
-    </div>
+    <button class="mclose" onclick="closeUpload()">×</button>
+    <h3 id="upTitle">Carregar relatório</h3>
+    <p id="upDesc">Selecione o arquivo .xlsx.</p>
+    <div class="dropzone" id="dz"><p>Arraste o .xlsx aqui<br>ou clique para selecionar</p></div>
+    <label class="btn btn-green" for="fi" style="display:block;text-align:center">Selecionar arquivo</label>
+    <input type="file" class="fi" id="fi" accept=".xlsx,.xls">
+    <div class="pw" id="pw"><div class="pb-bg"><div class="pb-fill" id="pbf"></div></div><div class="plabel" id="pbl"></div></div>
   </div>
 </div>
 
 <!-- PUBLISH -->
-<div class="overlay" id="publishOverlay">
+<div class="overlay" id="ovPub">
   <div class="modal">
-    <button class="modal-close" onclick="closePublish()">×</button>
+    <button class="mclose" onclick="closePublish()">×</button>
     <h3>Publicar no GitHub</h3>
-    <p>Envia os dados para <strong>sheldonthiago/dashboarcadastroibr</strong>.</p>
-    <button class="btn btn-blue" id="btnConfirmPublish" style="width:100%;justify-content:center" onclick="publishToGitHub()">☁ Confirmar publicação</button>
-    <div id="publishStatus"></div>
+    <p>Envia os dados para <strong>sheldonthiago/dashboarcadastroibr</strong>. Qualquer pessoa que abrir o site verá os dados atualizados.</p>
+    <button class="btn btn-blue" id="btnConfPub" style="width:100%;justify-content:center" onclick="publishGH()">☁ Confirmar</button>
+    <div id="pubStatus"></div>
   </div>
 </div>
 
 <!-- TOKEN -->
-<div class="overlay" id="tokenOverlay">
+<div class="overlay" id="ovToken">
   <div class="modal">
-    <button class="modal-close" onclick="closeToken()">×</button>
+    <button class="mclose" onclick="closeToken()">×</button>
     <h3>Token do GitHub</h3>
-    <p>Necessário para publicar dados no repositório. Salvo apenas no seu navegador.</p>
+    <p>Necessário para publicar. Salvo apenas no seu navegador.</p>
     <div class="field">
       <label>Personal Access Token</label>
-      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-      <div class="field-hint">Gere em: <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank">github.com/settings/tokens</a> — escopo <strong>repo</strong></div>
+      <input type="password" id="tokInput" placeholder="ghp_...">
+      <div class="fhint">Gere em: <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank">github.com/settings/tokens</a> — escopo <strong>repo</strong></div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-green" style="flex:1;justify-content:center" onclick="saveToken()">Salvar</button>
-      <button class="btn btn-red" onclick="clearToken()">Apagar</button>
+      <button class="btn btn-green" style="flex:1;justify-content:center" onclick="saveTok()">Salvar</button>
+      <button class="btn btn-red" onclick="clearTok()">Apagar</button>
     </div>
-    <div id="tokenStatus" style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center"></div>
+    <div id="tokStatus" style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
 <div id="toast"></div>
 
 <div id="main">
-  <!-- ABA FOTOS -->
+
+  <!-- ══ ABA FOTOS ══ -->
   <div class="page active" id="page-fotos">
-    <div class="loading" id="loadingFotos">Carregando dados de fotos...</div>
-    <div id="dashFotos" style="display:none">
-      <div class="kpi-grid" id="kpiFotos"></div>
-      <div class="two-col">
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header">
-            <span class="card-title">Cadastros por dia</span>
-            <div class="legend">
-              <span><span class="ldot" style="background:#22c48a"></span>Com foto</span>
-              <span><span class="ldot" style="background:#f06060"></span>Sem foto</span>
-            </div>
-          </div>
-          <div style="position:relative;width:100%;height:260px"><canvas id="chartFotos"></canvas></div>
-        </div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-header"><span class="card-title">Cobertura por mês</span></div>
-          <div style="position:relative;width:100%;height:260px"><canvas id="chartFotosMes"></canvas></div>
-        </div>
+    <div class="loading" id="loadF">Carregando...</div>
+    <div id="dashF" style="display:none">
+      <div class="kpi-grid" id="kpiF"></div>
+      <div class="controls">
+        <label>Período:</label><select id="selMF"></select>
+        <label>Foto:</label>
+        <select id="selFotoF">
+          <option value="all">Todos</option>
+          <option value="SIM">Com foto</option>
+          <option value="NÃO">Sem foto</option>
+        </select>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchF" placeholder="Buscar produto..."></div>
+        <span class="tag" id="tagF"></span>
       </div>
+      <!-- gráfico resumo -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Produtos cadastrados</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input class="search-input" id="searchFotos" placeholder="Buscar produto..." oninput="filterFotosTable()">
-            <select id="selMesFotos" onchange="filterFotosTable()"></select>
-            <select id="selFoto" onchange="filterFotosTable()">
-              <option value="all">Todos</option>
-              <option value="SIM">Com foto</option>
-              <option value="NÃO">Sem foto</option>
-            </select>
-            <span class="tag" id="tagFotos"></span>
-          </div>
+        <div class="card-hdr">
+          <span class="card-title">Cadastros por dia</span>
+          <div class="legend"><span><span class="ldot" style="background:#22c48a"></span>Com foto</span><span><span class="ldot" style="background:#f06060"></span>Sem foto</span></div>
         </div>
+        <div style="position:relative;width:100%;height:260px"><canvas id="chartF"></canvas></div>
+      </div>
+      <!-- tabela produtos -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Produtos cadastrados</span></div>
         <div class="tw">
-          <table>
-            <thead><tr><th>Data</th><th>Código</th><th>Produto</th><th>Marca</th><th>Modelo</th><th>Foto</th></tr></thead>
-            <tbody id="tFotos"></tbody>
-          </table>
+          <table><thead><tr><th>Data</th><th>Produto</th><th>Marca</th><th>Modelo</th><th>Foto</th></tr></thead>
+          <tbody id="tF"></tbody></table>
         </div>
-        <div class="pagination" id="pagFotos"></div>
+        <div class="pagination" id="pagF"></div>
       </div>
     </div>
   </div>
 
-  <!-- ABA VENDAS -->
+  <!-- ══ ABA VENDAS ══ -->
   <div class="page" id="page-vendas">
-    <div class="loading" id="loadingVendas">Carregando dados de vendas...</div>
-    <div id="dashVendas" style="display:none">
-      <div class="kpi-grid" id="kpiVendas"></div>
+    <div class="loading" id="loadV">Carregando...</div>
+    <div id="dashV" style="display:none">
+      <div class="kpi-grid" id="kpiV"></div>
+      <div class="controls">
+        <label>Período:</label><select id="selMV"></select>
+        <label>Canal:</label>
+        <select id="selCanal">
+          <option value="all">Todos</option>
+          <option value="Balcão">Balcão</option>
+          <option value="Mercado Livre">Mercado Livre</option>
+        </select>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchV" placeholder="Buscar produto..."></div>
+        <span class="tag" id="tagV"></span>
+      </div>
+      <!-- gráficos -->
       <div class="two-col">
         <div class="card" style="margin-bottom:0">
-          <div class="card-header">
+          <div class="card-hdr">
             <span class="card-title">Vendas por dia (R$)</span>
-            <div class="legend">
-              <span><span class="ldot" style="background:#22c48a"></span>Balcão</span>
-              <span><span class="ldot" style="background:#5b9cf6"></span>Mercado Livre</span>
-            </div>
+            <div class="legend"><span><span class="ldot" style="background:#22c48a"></span>Balcão</span><span><span class="ldot" style="background:#5b9cf6"></span>ML</span></div>
           </div>
-          <div style="position:relative;width:100%;height:260px"><canvas id="chartVendasDia"></canvas></div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="chartVD"></canvas></div>
         </div>
         <div class="card" style="margin-bottom:0">
-          <div class="card-header"><span class="card-title">Participação por canal</span></div>
-          <div style="position:relative;width:100%;height:260px"><canvas id="chartCanal"></canvas></div>
+          <div class="card-hdr"><span class="card-title">Por canal</span></div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="chartVC"></canvas></div>
         </div>
       </div>
+      <!-- tabela produtos vendidos -->
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">Itens vendidos</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input class="search-input" id="searchVendas" placeholder="Buscar produto..." oninput="filterVendasTable()">
-            <select id="selMesVendas" onchange="filterVendasTable()"></select>
-            <select id="selCanal" onchange="filterVendasTable()">
-              <option value="all">Todos os canais</option>
-              <option value="Balcão">Balcão</option>
-              <option value="Mercado Livre">Mercado Livre</option>
-            </select>
-            <span class="tag" id="tagVendas"></span>
-          </div>
-        </div>
+        <div class="card-hdr"><span class="card-title">Produtos vendidos</span></div>
         <div class="tw">
-          <table>
-            <thead><tr><th>Data</th><th>Canal</th><th>Produto</th><th>Valor Venda</th><th>Desconto</th><th>Total</th></tr></thead>
-            <tbody id="tVendas"></tbody>
-          </table>
+          <table><thead><tr><th>Data</th><th>Produto</th><th>Canal</th><th>Valor</th><th>Desconto</th><th>Total</th></tr></thead>
+          <tbody id="tV"></tbody></table>
         </div>
-        <div class="pagination" id="pagVendas"></div>
+        <div class="pagination" id="pagV"></div>
       </div>
     </div>
   </div>
-</div>
 
+</div>
 <footer>Sucatão do Major · sheldonthiago/dashboarcadastroibr</footer>
 
 <script>
-const GITHUB_USER='sheldonthiago', GITHUB_REPO='dashboarcadastroibr';
-const LS_FOTOS='sucatao_fotos_v2', LS_VENDAS='sucatao_vendas_v2', LS_TOKEN='sucatao_gh_token';
-const PAGE_SIZE=50;
+const GH_USER='sheldonthiago',GH_REPO='dashboarcadastroibr';
+const LS_F='sucatao_fotos_v2',LS_V='sucatao_vendas_v2',LS_T='sucatao_gh_token';
+const PER_PAGE=50;
 
-let fotosAll=[], vendasAll=[], fotosFiltered=[], vendasFiltered=[];
-let fotosPage=1, vendasPage=1;
-let pendingPublish={};
-let chartFotos=null, chartFotosMes=null, chartVendasDia=null, chartCanal=null;
-let currentUploadType='fotos';
+let fotosRows=[],fotosDaily=[],vendasRows=[],vendasDaily=[];
+let pendPub={};
+let cF=null,cVD=null,cVC=null;
+let upType='fotos';
+// pagination state
+let pF=1,pV=1;
 
 /* ── LS ── */
-function tryLS(k){try{const r=localStorage.getItem(k);return r?JSON.parse(r):null;}catch{return null;}}
-function setLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn(e);}}
-function delLS(k){try{localStorage.removeItem(k);}catch{}}
+const tryLS=k=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):null}catch{return null}};
+const setLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.warn(e)}};
+const delLS=k=>{try{localStorage.removeItem(k)}catch{}};
 
 /* ── BOOTSTRAP ── */
-async function bootstrap(){
-  updateTokenUI();
-  const token=(tryLS(LS_TOKEN)||'').trim();
-  const h={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Cache-Control':'no-cache'};
-  if(token) h['Authorization']='Bearer '+token;
+async function boot(){
+  updTokUI();
+  const tok=(tryLS(LS_T)||'').trim();
+  const hdrs={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Cache-Control':'no-cache'};
+  if(tok) hdrs['Authorization']='Bearer '+tok;
 
-  const sf=tryLS(LS_FOTOS);
-  if(sf){fotosAll=sf.rows;setHeader('Atualizado: '+sf.updated,'local');initFotos();}
-  else await loadGH('data.json',h,d=>{fotosAll=d.rows;setHeader('Atualizado: '+d.updated,'base');initFotos();},()=>{document.getElementById('loadingFotos').textContent='Nenhum dado de fotos. Faça upload.';});
+  const sf=tryLS(LS_F);
+  if(sf){fotosDaily=sf.rows;fotosRows=sf.produtos||[];setHdr('Atualizado: '+sf.updated,'local');initF();}
+  else await ghLoad('data.json',hdrs,d=>{fotosDaily=d.rows;fotosRows=d.produtos||[];setHdr('Atualizado: '+d.updated,'base');initF();},()=>{document.getElementById('loadF').textContent='Nenhum dado. Faça upload do .xlsx.';});
 
-  const sv=tryLS(LS_VENDAS);
-  if(sv){vendasAll=sv.rows;initVendas();}
-  else await loadGH('vendas.json',h,d=>{vendasAll=d.rows;initVendas();},()=>{document.getElementById('loadingVendas').textContent='Nenhum dado de vendas. Faça upload.';});
+  const sv=tryLS(LS_V);
+  if(sv){vendasDaily=sv.rows;vendasRows=sv.produtos||[];initV();}
+  else await ghLoad('vendas.json',hdrs,d=>{vendasDaily=d.rows;vendasRows=d.produtos||[];initV();},()=>{document.getElementById('loadV').textContent='Nenhum dado. Faça upload do .xlsx.';});
 }
 
-async function loadGH(file,headers,onOk,onFail){
-  const url=`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${file}`;
+async function ghLoad(file,hdrs,ok,fail){
+  const api=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${file}`;
   try{
-    const r=await fetch(url,{headers}); if(!r.ok)throw 0;
-    const info=await r.json();
-    const json=JSON.parse(decodeURIComponent(escape(atob(info.content.replace(/\n/g,'')))));
-    onOk(json);
+    const r=await fetch(api,{headers:hdrs});if(!r.ok)throw 0;
+    const i=await r.json();
+    const j=JSON.parse(decodeURIComponent(escape(atob(i.content.replace(/\n/g,'')))));
+    ok(j);
   }catch{
-    try{const r2=await fetch(file+'?_='+Date.now());if(!r2.ok)throw 0;onOk(await r2.json());}
-    catch{onFail();}
+    try{const r2=await fetch(file+'?_='+Date.now());if(!r2.ok)throw 0;ok(await r2.json());}
+    catch{fail();}
   }
 }
 
-function setHeader(text,source){
-  document.getElementById('lastUpdate').textContent=text;
-  const b=document.getElementById('sourceBadge');
+function setHdr(t,s){
+  document.getElementById('lastUpdate').textContent=t;
+  const b=document.getElementById('srcBadge');
   const m={base:['sb-base','☁ repositório'],local:['sb-local','💾 local'],gh:['sb-gh','✓ GitHub']};
-  const[c,l]=m[source]||m.base; b.className='sbadge '+c; b.textContent=l;
+  const[c,l]=m[s]||m.base;b.className='sbadge '+c;b.textContent=l;
 }
 
 /* ── TABS ── */
-function switchTab(name,el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+function switchTab(n,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('page-'+n).classList.add('active');
+}
+
+/* ══════════════════════════
+   ABA FOTOS
+══════════════════════════ */
+function initF(){
+  document.getElementById('loadF').style.display='none';
+  document.getElementById('dashF').style.display='block';
+  buildSel('selMF',fotosDaily);
+  renderF();
+}
+
+function renderF(){
+  const mes=document.getElementById('selMF').value;
+  const foto=document.getElementById('selFotoF').value;
+  const q=(document.getElementById('searchF').value||'').toLowerCase().trim();
+
+  // daily filtered for chart
+  const daily=filtDay(fotosDaily,mes);
+  // products filtered
+  let prods=fotosRows.filter(r=>{
+    if(mes!=='all'&&getMes(r.d)!==mes)return false;
+    if(foto!=='all'&&r.foto!==foto)return false;
+    if(q&&!r.prod.toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  // KPIs from daily
+  const sim=daily.reduce((a,r)=>a+r.sim,0),tot=daily.reduce((a,r)=>a+r.total,0);
+  const nao=tot-sim,pct=tot?Math.round(sim/tot*100):0;
+  const mx=daily.reduce((b,r)=>r.sim>b.sim?r:b,{sim:0,d:'-'});
+  const cor=pct>=90?'var(--green)':pct>=70?'var(--amber)':'var(--red)';
+  renderKPI('kpiF',[
+    {l:'Com foto',v:sim.toLocaleString('pt-BR'),s:'SIM',c:'var(--green)'},
+    {l:'Sem foto',v:nao.toLocaleString('pt-BR'),s:'NÃO',c:'var(--red)'},
+    {l:'Total',v:tot.toLocaleString('pt-BR'),s:'cadastros',c:'var(--muted)'},
+    {l:'Cobertura',v:pct+'%',s:'com foto',c:cor},
+    {l:'Melhor dia',v:mx.sim,s:mx.d,c:'var(--amber)'},
+  ]);
+
+  // chart
+  if(cF)cF.destroy();
+  cF=bChart('chartF',daily.map(r=>r.d),[
+    {l:'Com foto',d:daily.map(r=>r.sim),c:'#22c48a'},
+    {l:'Sem foto',d:daily.map(r=>r.total-r.sim),c:'#f06060'}
+  ],true,v=>v+'');
+
+  // table paged
+  pF=1;
+  document.getElementById('tagF').textContent=prods.length+' produtos';
+  renderPageF(prods);
+}
+
+function renderPageF(prods){
+  const start=(pF-1)*PER_PAGE,slice=prods.slice(start,start+PER_PAGE);
+  document.getElementById('tF').innerHTML=slice.map(r=>`
+    <tr>
+      <td class="num">${r.d}</td>
+      <td class="prod-name" title="${r.prod}">${r.prod||'—'}</td>
+      <td>${r.marca||'—'}</td>
+      <td>${r.modelo||'—'}</td>
+      <td><span class="badge ${r.foto==='SIM'?'bg':'br'}">${r.foto}</span></td>
+    </tr>`).join('');
+  renderPag('pagF',prods.length,pF,p=>{pF=p;renderPageF(prods);});
+}
+
+/* ══════════════════════════
+   ABA VENDAS
+══════════════════════════ */
+function initV(){
+  document.getElementById('loadV').style.display='none';
+  document.getElementById('dashV').style.display='block';
+  buildSel('selMV',vendasDaily);
+  renderV();
+}
+
+function renderV(){
+  const mes=document.getElementById('selMV').value;
+  const canal=document.getElementById('selCanal').value;
+  const q=(document.getElementById('searchV').value||'').toLowerCase().trim();
+
+  const daily=filtDay(vendasDaily,mes);
+  let prods=vendasRows.filter(r=>{
+    if(mes!=='all'&&getMes(r.d)!==mes)return false;
+    if(canal!=='all'&&r.canal!==canal)return false;
+    if(q&&!r.prod.toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  const balcao=daily.reduce((a,r)=>a+(r.canal==='Balcão'?r.total:0),0);
+  const ml=daily.reduce((a,r)=>a+(r.canal==='Mercado Livre'?r.total:0),0);
+  const totGeral=balcao+ml;
+  // best day
+  const dayMap={};
+  daily.forEach(r=>{dayMap[r.d]=(dayMap[r.d]||0)+r.total;});
+  const bestD=Object.entries(dayMap).reduce((b,[d,v])=>v>b[1]?[d,v]:b,['—',0]);
+
+  renderKPI('kpiV',[
+    {l:'Total geral',v:'R$ '+fmt(totGeral),s:'todos canais',c:'var(--green)'},
+    {l:'Balcão',v:'R$ '+fmt(balcao),s:Math.round(balcao/totGeral*100||0)+'% do total',c:'var(--green)'},
+    {l:'Mercado Livre',v:'R$ '+fmt(ml),s:Math.round(ml/totGeral*100||0)+'% do total',c:'var(--blue)'},
+    {l:'Melhor dia',v:'R$ '+fmt(bestD[1]),s:bestD[0],c:'var(--amber)'},
+    {l:'Itens vendidos',v:prods.length.toLocaleString('pt-BR'),s:'no período',c:'var(--muted)'},
+  ]);
+
+  // gráfico dia
+  const dias=[...new Set(daily.map(r=>r.d))].sort();
+  const dBal=dias.map(d=>daily.filter(r=>r.d===d&&r.canal==='Balcão').reduce((a,r)=>a+r.total,0));
+  const dML =dias.map(d=>daily.filter(r=>r.d===d&&r.canal==='Mercado Livre').reduce((a,r)=>a+r.total,0));
+  if(cVD)cVD.destroy();
+  cVD=bChart('chartVD',dias,[{l:'Balcão',d:dBal,c:'#22c48a'},{l:'Mercado Livre',d:dML,c:'#5b9cf6'}],true,v=>'R$ '+fmt(v));
+
+  // donut
+  if(cVC)cVC.destroy();
+  cVC=new Chart(document.getElementById('chartVC'),{
+    type:'doughnut',
+    data:{labels:['Balcão','Mercado Livre'],datasets:[{data:[balcao,ml],backgroundColor:['#22c48a','#5b9cf6'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{
+      legend:{position:'bottom',labels:{color:'#888',font:{size:12},padding:14}},
+      tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',
+        callbacks:{label:ctx=>' R$ '+fmt(ctx.raw)+' ('+Math.round(ctx.raw/totGeral*100)+'%)'}}
+    }}
+  });
+
+  // tabela paged
+  pV=1;
+  document.getElementById('tagV').textContent=prods.length+' itens';
+  renderPageV(prods);
+}
+
+function renderPageV(prods){
+  const start=(pV-1)*PER_PAGE,slice=prods.slice(start,start+PER_PAGE);
+  document.getElementById('tV').innerHTML=slice.map(r=>`
+    <tr>
+      <td class="num">${r.d}</td>
+      <td class="prod-name" title="${r.prod}">${r.prod||'—'}</td>
+      <td><span class="badge ${r.canal==='Balcão'?'bg':'bb'}">${r.canal==='Mercado Livre'?'ML':r.canal}</span></td>
+      <td class="num">R$ ${fmt(r.val)}</td>
+      <td class="num" style="color:${r.desc>0?'var(--amber)':'var(--muted)'}">R$ ${fmt(r.desc)}</td>
+      <td class="num" style="color:var(--green)">R$ ${fmt(r.tot)}</td>
+    </tr>`).join('');
+  renderPag('pagV',prods.length,pV,p=>{pV=p;renderPageV(prods);});
+}
+
+/* ── PAGINAÇÃO ── */
+function renderPag(id,total,cur,cb){
+  const pages=Math.ceil(total/PER_PAGE);
+  if(pages<=1){document.getElementById(id).innerHTML='';return;}
+  const start=(cur-1)*PER_PAGE+1,end=Math.min(cur*PER_PAGE,total);
+  let html=`<span class="pinfo">${start}–${end} de ${total}</span>`;
+  html+=`<button ${cur===1?'disabled':''} onclick="(${cb.toString()})(${cur-1})">‹</button>`;
+  // show pages around current
+  for(let p=1;p<=pages;p++){
+    if(p===1||p===pages||Math.abs(p-cur)<=1)
+      html+=`<button class="${p===cur?'cur':''}" onclick="(${cb.toString()})(${p})">${p}</button>`;
+    else if(Math.abs(p-cur)===2)
+      html+=`<span style="color:var(--muted);padding:0 2px">…</span>`;
+  }
+  html+=`<button ${cur===pages?'disabled':''} onclick="(${cb.toString()})(${cur+1})">›</button>`;
+  document.getElementById(id).innerHTML=html;
+}
+
+/* ── HELPERS ── */
+const fmt=n=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const getMes=d=>{const p=d.split('/');return p[1]+'/'+p[2];};
+function filtDay(data,mes){return mes==='all'?data:data.filter(r=>getMes(r.d)===mes);}
+function buildSel(id,data){
+  const sel=document.getElementById(id);
+  const meses=[...new Set(data.map(r=>getMes(r.d)))];
+  sel.innerHTML='<option value="all">Todos os meses</option>';
+  const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  meses.forEach(m=>{const o=document.createElement('option');const[mm,yy]=m.split('/');o.value=m;o.textContent=nm[parseInt(mm)]+' '+yy;sel.appendChild(o);});
+}
+function renderKPI(id,items){
+  document.getElementById(id).innerHTML=items.map(i=>`
+    <div class="kpi" style="--kc:${i.c}">
+      <div class="kpi-label">${i.l}</div>
+      <div class="kpi-val">${i.v}</div>
+      <div class="kpi-sub">${i.s}</div>
+    </div>`).join('');
+}
+function bChart(cid,labels,datasets,stacked,tfmt){
+  return new Chart(document.getElementById(cid),{
+    type:'bar',
+    data:{labels,datasets:datasets.map(d=>({label:d.l,data:d.d,backgroundColor:d.c,borderRadius:3,borderSkipped:false}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',callbacks:{label:ctx=>ctx.dataset.label+': '+tfmt(ctx.raw)}}},
+      scales:{x:{stacked,ticks:{color:'#666',font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:26},grid:{color:'rgba(255,255,255,.04)'}},y:{stacked,ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}
+  });
 }
 
 /* ── UPLOAD ── */
-function openUpload(type){
-  currentUploadType=type;
-  document.getElementById('uploadTitle').textContent=type==='fotos'?'Carregar estoque':'Carregar vendas';
-  document.getElementById('uploadDesc').textContent=type==='fotos'?'Arquivo de produtos com coluna Foto.':'Arquivo de vendas com coluna Local de Venda.';
-  document.getElementById('pFill').style.width='0%';
-  document.getElementById('pbarWrap').style.display='none';
-  document.getElementById('uploadOverlay').classList.add('open');
+function openUpload(t){
+  upType=t;
+  document.getElementById('upTitle').textContent=t==='fotos'?'Carregar estoque (fotos)':'Carregar relatório de vendas';
+  document.getElementById('upDesc').textContent=t==='fotos'?'Arquivo com colunas: Data de Criação, Produto, Foto (SIM/NÃO).':'Arquivo com colunas: Data, Produto, Local de Venda, Valor de Venda, Desconto, Valores Totais.';
+  document.getElementById('pbf').style.width='0%';
+  document.getElementById('pw').style.display='none';
+  document.getElementById('ovUpload').classList.add('open');
 }
-function closeUpload(){document.getElementById('uploadOverlay').classList.remove('open');}
+function closeUpload(){document.getElementById('ovUpload').classList.remove('open');}
 
-function processFile(file){
+function procFile(file){
   setP(10,'Lendo arquivo...');
   const r=new FileReader();
   r.onload=e=>{
@@ -354,8 +529,7 @@ function processFile(file){
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
       setP(65,'Processando...');
-      if(currentUploadType==='fotos') procFotos(rows);
-      else procVendas(rows);
+      upType==='fotos'?procFotos(rows):procVendas(rows);
     }catch(err){setP(0,'');alert('Erro: '+err.message);}
   };
   r.readAsArrayBuffer(file);
@@ -364,353 +538,126 @@ function processFile(file){
 function procFotos(rows){
   const keys=Object.keys(rows[0]||{});
   const cD=keys.find(k=>/data.*cria/i.test(k))||keys[2];
-  const cF=keys.find(k=>/^foto$/i.test(k))||keys[20];
-  const cP=keys.find(k=>/^produto$/i.test(k))||keys[3];
-  const cC=keys.find(k=>/^c[oó]digo$/i.test(k))||keys[0];
-  const cM=keys.find(k=>/^marca$/i.test(k))||keys[8];
-  const cMo=keys.find(k=>/^modelo$/i.test(k))||keys[9];
-  const out=[];
+  const cF2=keys.find(k=>/^foto$/i.test(k))||keys[20];
+  const cP=keys.find(k=>/^produto$/i.test(k))||'Produto';
+  const cM=keys.find(k=>/^marca$/i.test(k))||'Marca';
+  const cMo=keys.find(k=>/^modelo$/i.test(k))||'Modelo';
+  const map={};const prods=[];
   rows.forEach(r=>{
-    const raw=r[cD]; if(!raw) return;
-    const dt=raw instanceof Date?raw:new Date(raw); if(isNaN(dt)) return;
-    out.push({
-      d:dt.toLocaleDateString('pt-BR'),
-      codigo:String(r[cC]||'').trim(),
-      produto:String(r[cP]||'').trim(),
-      marca:String(r[cM]||'').trim(),
-      modelo:String(r[cMo]||'').trim(),
-      foto:String(r[cF]||'').trim().toUpperCase(),
-      ts:dt.getTime()
-    });
+    const raw=r[cD];if(!raw)return;
+    const dt=raw instanceof Date?raw:new Date(raw);if(isNaN(dt))return;
+    const key=dt.toLocaleDateString('pt-BR');
+    if(!map[key])map[key]={d:key,sim:0,total:0,ts:dt.getTime()};
+    map[key].total++;
+    const foto=String(r[cF2]||'').trim().toUpperCase();
+    if(foto==='SIM')map[key].sim++;
+    prods.push({d:key,prod:String(r[cP]||'').trim(),foto,marca:String(r[cM]||'').trim(),modelo:String(r[cMo]||'').trim()});
   });
-  out.sort((a,b)=>b.ts-a.ts);
+  const daily=Object.values(map).sort((a,b)=>a.ts-b.ts);
   const now=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  setLS(LS_FOTOS,{rows:out,updated:now});
-  pendingPublish.fotos={rows:out,updated:now};
-  fotosAll=out;
-  setHeader('Atualizado: '+now,'local');
-  setP(100,'Concluído!');
-  setTimeout(()=>{closeUpload();initFotos();document.getElementById('btnPublish').style.display='inline-flex';showToast('✓ Fotos carregadas! Clique em Publicar.',false,4000);},400);
+  const obj={rows:daily,produtos:prods,updated:now};
+  setLS(LS_F,obj);pendPub.fotos=obj;fotosDaily=daily;fotosRows=prods;
+  setHdr('Atualizado: '+now,'local');setP(100,'Concluído!');
+  setTimeout(()=>{closeUpload();initF();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Fotos carregadas!',false,3500);},400);
 }
 
 function procVendas(rows){
   const keys=Object.keys(rows[0]||{});
   const cD=keys.find(k=>/^data$/i.test(k))||'Data';
   const cL=keys.find(k=>/local.*venda/i.test(k))||'Local de Venda';
-  const cPr=keys.find(k=>/^produto$/i.test(k))||'Produto';
-  const cVv=keys.find(k=>/valor.*venda/i.test(k))||'Valor de Venda';
+  const cP=keys.find(k=>/^produto$/i.test(k))||'Produto';
+  const cVl=keys.find(k=>/^valor de venda$/i.test(k))||'Valor de Venda';
   const cDc=keys.find(k=>/^desconto$/i.test(k))||'Desconto';
-  const cTt=keys.find(k=>/valores.*totais/i.test(k))||'Valores Totais';
-  const toF=v=>parseFloat(String(v||'0').replace(/\./g,'').replace(',','.'))||0;
-  const out=[];
+  const cT=keys.find(k=>/valores.*totais/i.test(k))||'Valores Totais';
+  const n=s=>parseFloat(String(s||'0').replace(/\./g,'').replace(',','.'))||0;
+  const map={};const prods=[];
   rows.forEach(r=>{
-    const local=String(r[cL]||'').trim(); if(!local||local==='nan') return;
-    const raw=r[cD]; if(!raw) return;
-    const dt=raw instanceof Date?raw:new Date(String(raw).split('/').reverse().join('-')); if(isNaN(dt)) return;
-    out.push({
-      d:dt.toLocaleDateString('pt-BR'),
-      canal:local,
-      produto:String(r[cPr]||'').trim(),
-      venda:Math.round(toF(r[cVv])*100)/100,
-      desc:Math.round(toF(r[cDc])*100)/100,
-      total:Math.round(toF(r[cTt])*100)/100,
-      ts:dt.getTime()
-    });
+    const local=String(r[cL]||'').trim();if(!local||local==='nan')return;
+    const raw=r[cD];if(!raw)return;
+    const dt=raw instanceof Date?raw:new Date(raw.split('/').reverse().join('-'));if(isNaN(dt))return;
+    const key=dt.toLocaleDateString('pt-BR');
+    if(!map[key])map[key]={};
+    if(!map[key][local])map[key][local]={d:key,canal:local,total:0,ts:dt.getTime()};
+    const tot=n(r[cT]);
+    map[key][local].total=Math.round((map[key][local].total+tot)*100)/100;
+    prods.push({d:key,canal:local,prod:String(r[cP]||'').trim(),val:n(r[cVl]),desc:n(r[cDc]),tot});
   });
-  out.sort((a,b)=>b.ts-a.ts);
+  const daily=Object.values(map).flatMap(m=>Object.values(m)).sort((a,b)=>a.ts-b.ts);
   const now=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  setLS(LS_VENDAS,{rows:out,updated:now});
-  pendingPublish.vendas={rows:out,updated:now};
-  vendasAll=out;
+  const obj={rows:daily,produtos:prods,updated:now};
+  setLS(LS_V,obj);pendPub.vendas=obj;vendasDaily=daily;vendasRows=prods;
   setP(100,'Concluído!');
-  setTimeout(()=>{closeUpload();initVendas();document.getElementById('btnPublish').style.display='inline-flex';showToast('✓ Vendas carregadas! Clique em Publicar.',false,4000);},400);
+  setTimeout(()=>{closeUpload();initV();document.getElementById('btnPub').style.display='inline-flex';showToast('✓ Vendas carregadas!',false,3500);},400);
 }
 
 function setP(pct,label){
-  document.getElementById('pbarWrap').style.display='block';
-  document.getElementById('pFill').style.width=pct+'%';
-  document.getElementById('pLabel').textContent=label;
-}
-
-/* ── INIT FOTOS ── */
-function initFotos(){
-  document.getElementById('loadingFotos').style.display='none';
-  document.getElementById('dashFotos').style.display='block';
-  buildMesSelect('selMesFotos', fotosAll);
-  filterFotosTable();
-  renderFotosCharts();
-}
-
-function filterFotosTable(){
-  const q=(document.getElementById('searchFotos').value||'').toLowerCase();
-  const mes=document.getElementById('selMesFotos').value;
-  const foto=document.getElementById('selFoto').value;
-  fotosFiltered=fotosAll.filter(r=>{
-    if(foto!=='all'&&r.foto!==foto) return false;
-    if(mes!=='all'&&getMes(r.d)!==mes) return false;
-    if(q&&!r.produto.toLowerCase().includes(q)&&!r.marca.toLowerCase().includes(q)&&!r.modelo.toLowerCase().includes(q)&&!r.codigo.includes(q)) return false;
-    return true;
-  });
-  fotosPage=1;
-  renderFotosKPIs();
-  renderFotosTable();
-}
-
-function renderFotosKPIs(){
-  const sim=fotosFiltered.filter(r=>r.foto==='SIM').length;
-  const total=fotosFiltered.length, nao=total-sim;
-  const pct=total?Math.round(sim/total*100):0;
-  const cor=pct>=90?'var(--green)':pct>=70?'var(--amber)':'var(--red)';
-  kpis('kpiFotos',[
-    {label:'Com foto',  val:sim.toLocaleString('pt-BR'),   sub:'foto = SIM', color:'var(--green)'},
-    {label:'Sem foto',  val:nao.toLocaleString('pt-BR'),   sub:'foto = NÃO', color:'var(--red)'},
-    {label:'Total',     val:total.toLocaleString('pt-BR'), sub:'produtos',   color:'var(--muted)'},
-    {label:'Cobertura', val:pct+'%',                       sub:'com foto',   color:cor},
-  ]);
-}
-
-function renderFotosCharts(){
-  // agrupa por dia
-  const dayMap={};
-  fotosAll.forEach(r=>{
-    if(!dayMap[r.d]) dayMap[r.d]={d:r.d,sim:0,total:0,ts:r.ts};
-    dayMap[r.d].total++;
-    if(r.foto==='SIM') dayMap[r.d].sim++;
-  });
-  const days=Object.values(dayMap).sort((a,b)=>a.ts-b.ts);
-  if(chartFotos) chartFotos.destroy();
-  chartFotos=barChart('chartFotos',days.map(r=>r.d),[
-    {label:'Com foto',data:days.map(r=>r.sim),color:'#22c48a'},
-    {label:'Sem foto',data:days.map(r=>r.total-r.sim),color:'#f06060'}
-  ],true,v=>''+v);
-
-  // por mês
-  const mesMap={};
-  fotosAll.forEach(r=>{
-    const m=getMes(r.d);
-    if(!mesMap[m]) mesMap[m]={sim:0,total:0};
-    mesMap[m].total++;
-    if(r.foto==='SIM') mesMap[m].sim++;
-  });
-  const mLabels=Object.keys(mesMap);
-  const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const mDisplay=mLabels.map(m=>{const[mm,yy]=m.split('/');return nm[parseInt(mm)]+'/'+yy;});
-  if(chartFotosMes) chartFotosMes.destroy();
-  chartFotosMes=new Chart(document.getElementById('chartFotosMes'),{
-    type:'bar',
-    data:{labels:mDisplay,datasets:[
-      {label:'Com foto',data:mLabels.map(m=>mesMap[m].sim),backgroundColor:'#22c48a',borderRadius:4,borderSkipped:false},
-      {label:'Sem foto',data:mLabels.map(m=>mesMap[m].total-mesMap[m].sim),backgroundColor:'#f06060',borderRadius:4,borderSkipped:false}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888'}},
-      scales:{x:{stacked:true,ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{stacked:true,ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
-  });
-}
-
-function renderFotosTable(){
-  const start=(fotosPage-1)*PAGE_SIZE, end=start+PAGE_SIZE;
-  const page=fotosFiltered.slice(start,end);
-  document.getElementById('tagFotos').textContent=fotosFiltered.length+' produtos';
-  document.getElementById('tFotos').innerHTML=page.map(r=>`
-    <tr>
-      <td class="num">${r.d}</td>
-      <td class="num">${r.codigo}</td>
-      <td style="max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.produto}">${r.produto}</td>
-      <td>${r.marca}</td>
-      <td>${r.modelo}</td>
-      <td><span class="badge ${r.foto==='SIM'?'b-green':'b-red'}">${r.foto}</span></td>
-    </tr>`).join('');
-  renderPagination('pagFotos', fotosFiltered.length, fotosPage, p=>{fotosPage=p;renderFotosTable();});
-}
-
-/* ── INIT VENDAS ── */
-function initVendas(){
-  document.getElementById('loadingVendas').style.display='none';
-  document.getElementById('dashVendas').style.display='block';
-  buildMesSelect('selMesVendas', vendasAll);
-  filterVendasTable();
-  renderVendasCharts();
-}
-
-function filterVendasTable(){
-  const q=(document.getElementById('searchVendas').value||'').toLowerCase();
-  const mes=document.getElementById('selMesVendas').value;
-  const canal=document.getElementById('selCanal').value;
-  vendasFiltered=vendasAll.filter(r=>{
-    if(canal!=='all'&&r.canal!==canal) return false;
-    if(mes!=='all'&&getMes(r.d)!==mes) return false;
-    if(q&&!r.produto.toLowerCase().includes(q)) return false;
-    return true;
-  });
-  vendasPage=1;
-  renderVendasKPIs();
-  renderVendasTable();
-}
-
-function renderVendasKPIs(){
-  const bal=vendasFiltered.filter(r=>r.canal==='Balcão');
-  const ml=vendasFiltered.filter(r=>r.canal==='Mercado Livre');
-  const tBal=bal.reduce((a,r)=>a+r.total,0);
-  const tML=ml.reduce((a,r)=>a+r.total,0);
-  const total=tBal+tML;
-  const desc=vendasFiltered.reduce((a,r)=>a+r.desc,0);
-  kpis('kpiVendas',[
-    {label:'Total geral',   val:'R$ '+fmt(total),  sub:'todos os canais',        color:'var(--green)'},
-    {label:'Balcão',        val:'R$ '+fmt(tBal),   sub:Math.round(tBal/total*100||0)+'% do total', color:'var(--green)'},
-    {label:'Mercado Livre', val:'R$ '+fmt(tML),    sub:Math.round(tML/total*100||0)+'% do total',  color:'var(--blue)'},
-    {label:'Descontos',     val:'R$ '+fmt(desc),   sub:'total concedido',        color:'var(--amber)'},
-    {label:'Itens',         val:vendasFiltered.length, sub:'na seleção',         color:'var(--muted)'},
-  ]);
-}
-
-function renderVendasCharts(){
-  // por dia
-  const dayMap={};
-  vendasAll.forEach(r=>{
-    if(!dayMap[r.d]) dayMap[r.d]={d:r.d,bal:0,ml:0,ts:r.ts};
-    if(r.canal==='Balcão') dayMap[r.d].bal+=r.total;
-    else if(r.canal==='Mercado Livre') dayMap[r.d].ml+=r.total;
-  });
-  const days=Object.values(dayMap).sort((a,b)=>a.ts-b.ts);
-  if(chartVendasDia) chartVendasDia.destroy();
-  chartVendasDia=barChart('chartVendasDia',days.map(r=>r.d),[
-    {label:'Balcão',data:days.map(r=>Math.round(r.bal*100)/100),color:'#22c48a'},
-    {label:'Mercado Livre',data:days.map(r=>Math.round(r.ml*100)/100),color:'#5b9cf6'}
-  ],true,v=>'R$ '+fmt(v));
-
-  // donut
-  const tBal=vendasAll.filter(r=>r.canal==='Balcão').reduce((a,r)=>a+r.total,0);
-  const tML=vendasAll.filter(r=>r.canal==='Mercado Livre').reduce((a,r)=>a+r.total,0);
-  const tot=tBal+tML;
-  if(chartCanal) chartCanal.destroy();
-  chartCanal=new Chart(document.getElementById('chartCanal'),{
-    type:'doughnut',
-    data:{labels:['Balcão','Mercado Livre'],datasets:[{data:[tBal,tML],backgroundColor:['#22c48a','#5b9cf6'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{
-      legend:{position:'bottom',labels:{color:'#888',font:{size:12},padding:16}},
-      tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',callbacks:{label:ctx=>' R$ '+fmt(ctx.raw)+' ('+Math.round(ctx.raw/tot*100)+'%)'}}
-    }}
-  });
-}
-
-function renderVendasTable(){
-  const start=(vendasPage-1)*PAGE_SIZE, end=start+PAGE_SIZE;
-  const page=vendasFiltered.slice(start,end);
-  document.getElementById('tagVendas').textContent=vendasFiltered.length+' itens';
-  document.getElementById('tVendas').innerHTML=page.map(r=>`
-    <tr>
-      <td class="num">${r.d}</td>
-      <td><span class="badge ${r.canal==='Balcão'?'b-green':'b-blue'}">${r.canal}</span></td>
-      <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.produto}">${r.produto}</td>
-      <td class="num">R$ ${fmt(r.venda)}</td>
-      <td class="num" style="color:${r.desc>0?'var(--amber)':'var(--muted)'}">${r.desc>0?'- R$ '+fmt(r.desc):'-'}</td>
-      <td class="num" style="font-weight:600">R$ ${fmt(r.total)}</td>
-    </tr>`).join('');
-  renderPagination('pagVendas', vendasFiltered.length, vendasPage, p=>{vendasPage=p;renderVendasTable();});
-}
-
-/* ── PAGINATION ── */
-function renderPagination(id, total, current, onPage){
-  const pages=Math.ceil(total/PAGE_SIZE);
-  const el=document.getElementById(id);
-  if(pages<=1){el.innerHTML='';return;}
-  let html=`<span class="pinfo">${((current-1)*PAGE_SIZE)+1}–${Math.min(current*PAGE_SIZE,total)} de ${total}</span>`;
-  html+=`<button ${current===1?'disabled':''} onclick="(${onPage.toString()})(${current-1})">‹</button>`;
-  for(let i=1;i<=pages;i++){
-    if(i===1||i===pages||Math.abs(i-current)<=1)
-      html+=`<button class="${i===current?'active':''}" onclick="(${onPage.toString()})(${i})">${i}</button>`;
-    else if(Math.abs(i-current)===2)
-      html+=`<span style="color:var(--muted);font-size:12px">…</span>`;
-  }
-  html+=`<button ${current===pages?'disabled':''} onclick="(${onPage.toString()})(${current+1})">›</button>`;
-  el.innerHTML=html;
-}
-
-/* ── HELPERS ── */
-function fmt(n){return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function getMes(d){const p=d.split('/');return p[1]+'/'+p[2];}
-function buildMesSelect(id,data){
-  const sel=document.getElementById(id);
-  const meses=[...new Set(data.map(r=>getMes(r.d)))];
-  sel.innerHTML='<option value="all">Todos os meses</option>';
-  const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  meses.forEach(m=>{const o=document.createElement('option');const[mm,yy]=m.split('/');o.value=m;o.textContent=nm[parseInt(mm)]+' '+yy;sel.appendChild(o);});
-}
-function kpis(id,items){
-  document.getElementById(id).innerHTML=items.map(i=>`
-    <div class="kpi" style="--kpi-color:${i.color}">
-      <div class="kpi-label">${i.label}</div>
-      <div class="kpi-val">${i.val}</div>
-      <div class="kpi-sub">${i.sub}</div>
-    </div>`).join('');
-}
-function barChart(id,labels,datasets,stacked,tfmt){
-  return new Chart(document.getElementById(id),{
-    type:'bar',
-    data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,backgroundColor:d.color,borderRadius:3,borderSkipped:false}))},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',callbacks:{label:ctx=>ctx.dataset.label+': '+tfmt(ctx.raw)}}},
-      scales:{x:{stacked,ticks:{color:'#666',font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:28},grid:{color:'rgba(255,255,255,0.04)'}},y:{stacked,ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
-  });
+  document.getElementById('pw').style.display='block';
+  document.getElementById('pbf').style.width=pct+'%';
+  document.getElementById('pbl').textContent=label;
 }
 
 /* ── PUBLISH ── */
-function openPublish(){document.getElementById('publishStatus').textContent='';document.getElementById('btnConfirmPublish').disabled=false;document.getElementById('publishOverlay').classList.add('open');}
-function closePublish(){document.getElementById('publishOverlay').classList.remove('open');}
+function openPublish(){document.getElementById('pubStatus').textContent='';document.getElementById('btnConfPub').disabled=false;document.getElementById('ovPub').classList.add('open');}
+function closePublish(){document.getElementById('ovPub').classList.remove('open');}
 
-async function publishToGitHub(){
-  const token=(tryLS(LS_TOKEN)||'').trim();
-  if(!token){closePublish();showToast('⚠ Configure o token GitHub primeiro (⚙)',true);openToken();return;}
-  const btn=document.getElementById('btnConfirmPublish');
-  const status=document.getElementById('publishStatus');
+async function publishGH(){
+  const tok=(tryLS(LS_T)||'').trim();
+  if(!tok){closePublish();showToast('⚠ Configure o token (⚙)',true);openToken();return;}
+  const btn=document.getElementById('btnConfPub');const st=document.getElementById('pubStatus');
   btn.disabled=true;
-  const toPublish=[];
-  if(pendingPublish.fotos)  toPublish.push({file:'data.json',  data:pendingPublish.fotos});
-  if(pendingPublish.vendas) toPublish.push({file:'vendas.json',data:pendingPublish.vendas});
-  if(!toPublish.length){const d=tryLS(LS_FOTOS);if(d)toPublish.push({file:'data.json',data:d});}
-  const headers={'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  const hdrs={'Authorization':'Bearer '+tok,'Content-Type':'application/json','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  const files=[];
+  if(pendPub.fotos)files.push({file:'data.json',data:pendPub.fotos});
+  if(pendPub.vendas)files.push({file:'vendas.json',data:pendPub.vendas});
+  if(!files.length){const d=tryLS(LS_F);if(d)files.push({file:'data.json',data:d});}
   let ok=0;
-  for(const item of toPublish){
-    status.style.color='var(--muted)';status.textContent='⏳ Publicando '+item.file+'...';
+  for(const item of files){
+    st.style.color='var(--muted)';st.textContent='⏳ Publicando '+item.file+'...';
     try{
-      const url=`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${item.file}`;
-      let sha=null;
-      const gr=await fetch(url,{headers});if(gr.ok){const gi=await gr.json();sha=gi.sha;}
+      const api=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${item.file}`;
+      let sha=null;const gr=await fetch(api,{headers:hdrs});if(gr.ok){const gi=await gr.json();sha=gi.sha;}
       const content=btoa(unescape(encodeURIComponent(JSON.stringify(item.data))));
-      const body={message:'dashboard: atualiza '+item.file,content,...(sha?{sha}:{})};
-      const pr=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
+      const body={message:'dashboard: '+item.file+' '+item.data.updated,content,...(sha?{sha}:{})};
+      const pr=await fetch(api,{method:'PUT',headers:hdrs,body:JSON.stringify(body)});
       if(!pr.ok){const e=await pr.json();throw new Error(e.message);}
       ok++;
-    }catch(err){status.style.color='var(--red)';status.textContent='✗ Erro: '+err.message;btn.disabled=false;return;}
+    }catch(err){st.style.color='var(--red)';st.textContent='✗ '+err.message;btn.disabled=false;return;}
   }
-  status.style.color='var(--green)';status.textContent='✓ '+ok+' arquivo(s) publicado(s)!';
-  setHeader('Publicado agora','gh');
-  pendingPublish={};
-  document.getElementById('btnPublish').style.display='none';
-  setTimeout(()=>{closePublish();showToast('✓ GitHub atualizado!');},800);
+  st.style.color='var(--green)';st.textContent='✓ '+ok+' arquivo(s) publicado(s)!';
+  setHdr(new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),'gh');
+  pendPub={};document.getElementById('btnPub').style.display='none';
+  setTimeout(()=>{closePublish();showToast('✓ GitHub atualizado!');},700);
 }
 
 /* ── TOKEN ── */
-function updateTokenUI(){const t=tryLS(LS_TOKEN);const s=document.getElementById('tokenStatus');if(s)s.textContent=t?'✓ Token salvo':'Nenhum token configurado';}
-function saveToken(){const v=document.getElementById('tokenInput').value.trim();if(!v){alert('Digite o token.');return;}setLS(LS_TOKEN,v);document.getElementById('tokenInput').value='';showToast('✓ Token salvo');updateTokenUI();setTimeout(closeToken,600);}
-function clearToken(){if(!confirm('Apagar o token?'))return;delLS(LS_TOKEN);updateTokenUI();showToast('Token removido',true);}
-function openToken(){updateTokenUI();document.getElementById('tokenOverlay').classList.add('open');}
-function closeToken(){document.getElementById('tokenOverlay').classList.remove('open');}
+function updTokUI(){const t=tryLS(LS_T);const s=document.getElementById('tokStatus');if(s)s.textContent=t?'✓ Token salvo':'Sem token configurado';}
+function saveTok(){const v=document.getElementById('tokInput').value.trim();if(!v){alert('Digite o token.');return;}setLS(LS_T,v);document.getElementById('tokInput').value='';showToast('✓ Token salvo');updTokUI();setTimeout(closeToken,600);}
+function clearTok(){if(!confirm('Apagar token?'))return;delLS(LS_T);updTokUI();showToast('Token removido',true);}
+function openToken(){updTokUI();document.getElementById('ovToken').classList.add('open');}
+function closeToken(){document.getElementById('ovToken').classList.remove('open');}
 
 /* ── TOAST ── */
-let toastTimer;
-function showToast(msg,isError=false,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.className=isError?'error show':'show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',dur);}
+let tt;
+function showToast(msg,err=false,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.className=err?'err show':'show';clearTimeout(tt);tt=setTimeout(()=>t.className='',dur);}
 
-/* ── EVENTS ── */
-document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])processFile(e.target.files[0]);e.target.value='';});
+/* ── EVENTOS ── */
+document.getElementById('fi').addEventListener('change',e=>{if(e.target.files[0])procFile(e.target.files[0]);e.target.value='';});
 const dz=document.getElementById('dz');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0]);});
-dz.addEventListener('click',()=>document.getElementById('fileInput').click());
-['uploadOverlay','publishOverlay','tokenOverlay'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)document.getElementById(id).classList.remove('open');});});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])procFile(e.dataTransfer.files[0]);});
+dz.addEventListener('click',()=>document.getElementById('fi').click());
+document.getElementById('selMF').addEventListener('change',renderF);
+document.getElementById('selFotoF').addEventListener('change',renderF);
+document.getElementById('searchF').addEventListener('input',renderF);
+document.getElementById('selMV').addEventListener('change',renderV);
+document.getElementById('selCanal').addEventListener('change',renderV);
+document.getElementById('searchV').addEventListener('input',renderV);
+['ovUpload','ovPub','ovToken'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)document.getElementById(id).classList.remove('open');});
+});
 
-bootstrap();
+boot();
 </script>
 </body>
 </html>
