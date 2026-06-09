@@ -1552,9 +1552,25 @@ function initA(){
   document.getElementById('loadA').style.display='none';
   document.getElementById('noDataA').style.display='none';
   document.getElementById('dashA').style.display='block';
-  // popula select de meses
-  const meses=[...new Set(anunciosProds.map(r=>getMes(r.d)).filter(Boolean))].sort();
-  buildSel('selMesA', meses);
+  // popula select de meses — filtra entradas sem data válida
+  const meses=[...new Set(
+    anunciosProds
+      .map(r=>r.d&&r.d.includes('/')?getMes(r.d):null)
+      .filter(Boolean)
+  )].sort((a,b)=>{
+    const[ma,ya]=a.split('/');const[mb,yb]=b.split('/');
+    return (+ya*100+ +ma)-(+yb*100+ +mb);
+  });
+  // reconstrói o select manualmente para garantir
+  const sel=document.getElementById('selMesA');
+  const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  sel.innerHTML='<option value="all">Todos os meses</option>';
+  meses.forEach(m=>{
+    const[mm,yy]=m.split('/');
+    const o=document.createElement('option');
+    o.value=m; o.textContent=nm[parseInt(mm)]+' '+yy;
+    sel.appendChild(o);
+  });
   renderA();
 }
 function initAEmpty(){
