@@ -1584,10 +1584,9 @@ function renderA(){
   const listagem=document.getElementById('selListagemA').value;
   const q=(document.getElementById('searchA').value||'').toLowerCase().trim();
 
-  // getMes seguro — retorna '' se data inválida
-  const getMesA=d=>{if(!d||!d.includes('/'))return '';const p=d.split('/');return p.length===3?p[1]+'/'+p[2]:'';}
+  const getMesA=d=>{if(!d||!d.includes('/'))return'';const p=d.split('/');return p.length===3?p[1]+'/'+p[2]:'';}
 
-  let prods=anunciosProds.filter(r=>{
+  const prods=anunciosProds.filter(r=>{
     if(mes!=='all'&&getMesA(r.d)!==mes)return false;
     if(status!=='all'&&r.status!==status)return false;
     if(listagem!=='all'&&r.listagem!==listagem)return false;
@@ -1597,25 +1596,27 @@ function renderA(){
     return true;
   });
 
-  // KPIs baseados nos dados FILTRADOS
-  const total=prods.length;
+  // ── KPIs (todos baseados em prods filtrados) ──
+  const tot=prods.length;
   const ativos=prods.filter(r=>r.status==='Ativo').length;
   const pausados=prods.filter(r=>r.status==='Pausado').length;
   const revisao=prods.filter(r=>r.status==='Sob Revisão').length;
-  const premium=prods.filter(r=>r.listagem==='Premium').length;
   const finalizados=prods.filter(r=>r.status==='Finalizado').length;
+  const inativos=prods.filter(r=>r.status==='Inativo').length;
+  const premiumQt=prods.filter(r=>r.listagem==='Premium').length;
   renderKPI('kpiA',[
-    {l:'Total',      v:total.toLocaleString('pt-BR'),      s:'no filtro',         c:'var(--blue)'},
-    {l:'Ativos',     v:ativos.toLocaleString('pt-BR'),     s:pct(ativos,total)+'% do total',    c:'var(--green)'},
-    {l:'Pausados',   v:pausados.toLocaleString('pt-BR'),   s:pct(pausados,total)+'% do total',  c:'var(--amber)'},
-    {l:'Sob Revisão',v:revisao.toLocaleString('pt-BR'),    s:pct(revisao,total)+'% do total',   c:'var(--red)'},
-    {l:'Premium',    v:premium.toLocaleString('pt-BR'),    s:pct(premium,total)+'% do total',   c:'var(--purple)'},
+    {l:'Total',       v:tot.toLocaleString('pt-BR'),        s:'no filtro atual',              c:'var(--blue)'},
+    {l:'Ativos',      v:ativos.toLocaleString('pt-BR'),     s:pct(ativos,tot)+'% do total',   c:'var(--green)'},
+    {l:'Pausados',    v:pausados.toLocaleString('pt-BR'),   s:pct(pausados,tot)+'% do total', c:'var(--amber)'},
+    {l:'Sob Revisão', v:revisao.toLocaleString('pt-BR'),    s:pct(revisao,tot)+'% do total',  c:'var(--red)'},
+    {l:'Premium',     v:premiumQt.toLocaleString('pt-BR'),  s:pct(premiumQt,tot)+'% do total',c:'var(--purple)'},
   ]);
 
-  // gráfico por status (donut)
+  // ── Gráfico por status ──
   const statusKeys=['Ativo','Pausado','Sob Revisão','Finalizado','Inativo'];
   const statusColors=['#22c48a','#f0a030','#f06060','#888986','#5b9cf6'];
   const statusVals=statusKeys.map(s=>prods.filter(r=>r.status===s).length);
+  const statusTotal=statusVals.reduce((a,v)=>a+v,0);
 
   if(cAS){cAS.destroy();cAS=null;}
   const canvasAS=document.getElementById('chartAS');
@@ -1632,25 +1633,30 @@ function renderA(){
       },
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{
-          legend:{position:'bottom',labels:{color:'#888',font:{size:11},padding:10}},
+          legend:{position:'bottom',labels:{color:'#888',font:{size:11},padding:10,filter:item=>statusVals[item.index]>0}},
           tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',
-            callbacks:{label:ctx=>' '+ctx.raw.toLocaleString('pt-BR')+' ('+Math.round(ctx.raw/total*100)+'%)'}}
+            callbacks:{label:ctx=>' '+ctx.raw.toLocaleString('pt-BR')+' ('+Math.round(ctx.raw/(statusTotal||1)*100)+'%)'}}
         },
         onClick:(evt)=>{
+          if(!cAS)return;
           const pts=cAS.getElementsAtEventForMode(evt,'nearest',{intersect:true},true);
           if(!pts.length)return;
           const lbl=statusKeys[pts[0].index];
+          if(statusVals[pts[0].index]===0)return; // ignora fatia vazia
           clickStatusA=clickStatusA===lbl?null:lbl;
+          // sincroniza o select de status
+          document.getElementById('selStatusA').value=clickStatusA||'all';
           updFilterBadgeA();renderA();
         }
       }
     });
   }
 
-  // gráfico por listagem (donut)
+  // ── Gráfico por listagem ──
   const listKeys=['Premium','Clássico'];
   const listColors=['#a78bfa','#5b9cf6'];
   const listVals=listKeys.map(l=>prods.filter(r=>r.listagem===l).length);
+  const listTotal=listVals.reduce((a,v)=>a+v,0);
 
   if(cAL){cAL.destroy();cAL=null;}
   const canvasAL=document.getElementById('chartAL');
@@ -1669,13 +1675,16 @@ function renderA(){
         plugins:{
           legend:{position:'bottom',labels:{color:'#888',font:{size:11},padding:10}},
           tooltip:{backgroundColor:'#1e2023',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0ee',bodyColor:'#888',
-            callbacks:{label:ctx=>' '+ctx.raw.toLocaleString('pt-BR')+' ('+Math.round(ctx.raw/total*100)+'%)'}}
+            callbacks:{label:ctx=>' '+ctx.raw.toLocaleString('pt-BR')+' ('+Math.round(ctx.raw/(listTotal||1)*100)+'%)'}}
         },
         onClick:(evt)=>{
+          if(!cAL)return;
           const pts=cAL.getElementsAtEventForMode(evt,'nearest',{intersect:true},true);
           if(!pts.length)return;
           const lbl=listKeys[pts[0].index];
           clickListagemA=clickListagemA===lbl?null:lbl;
+          // sincroniza o select de listagem
+          document.getElementById('selListagemA').value=clickListagemA||'all';
           updFilterBadgeA();renderA();
         }
       }
