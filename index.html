@@ -80,6 +80,10 @@ select:focus{border-color:var(--green)}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
 .card-title{font-size:14px;font-weight:500}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+.page .card{margin-bottom:1.5rem}
+.page .two-col .card{margin-bottom:0}
+.page .kpi-grid{margin-bottom:1.5rem}
+.page .controls{margin-bottom:1.25rem}
 @media(max-width:700px){.two-col{grid-template-columns:1fr}}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px}
@@ -119,19 +123,19 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <div class="hright">
     <span class="lupdate" id="lastUpdate">carregando...</span>
     <span class="sbadge sb-base" id="srcBadge"></span>
-    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Cadastro IBR</button>
-    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas Realizadas</button>
-    <button class="btn btn-outline" onclick="openUpload('canceladas')">↑ Vendas Canceladas</button>
-    <button class="btn btn-outline" onclick="openUpload('anuncios')">↑ Anúncios ML</button>
+    <button class="btn btn-outline" onclick="openUpload('fotos')">↑ Fotos</button>
+    <button class="btn btn-outline" onclick="openUpload('vendas')">↑ Vendas</button>
+    <button class="btn btn-outline" onclick="openUpload('canceladas')">↑ Canceladas</button>
+    <button class="btn btn-outline" onclick="openUpload('anuncios')">↑ Anúncios</button>
     <button class="btn btn-blue" id="btnPub" style="display:none" onclick="openPublish()">☁ Publicar</button>
     <button class="btn btn-outline" onclick="openToken()">⚙</button>
   </div>
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('fotos',this)">📋 Cadastro IBR</button>
+  <button class="tab active" onclick="switchTab('fotos',this)">📋 Cadastro</button>
   <button class="tab" onclick="switchTab('vendas',this)">✅ Vendas Realizadas</button>
-  <button class="tab" onclick="switchTab('canceladas',this)">❌ Vendas Canceladas</button>
+  <button class="tab" onclick="switchTab('canceladas',this)">❌ Canceladas</button>
   <button class="tab" onclick="switchTab('anuncios',this)">🛒 Anúncios ML</button>
 </div>
 
