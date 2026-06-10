@@ -313,6 +313,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <button class="tab" onclick="switchTab('desconto',this)">🏷️ Desconto por Canal</button>
   <button class="tab" onclick="switchTab('anuncios',this)">🛒 Anúncios ML</button>
   <button class="tab" onclick="switchTab('abc',this)">📊 Curva ABC</button>
+  <button class="tab" onclick="switchTab('ranking',this)">🏍️ Ranking Marcas</button>
 </div>
 
 <!-- MOBILE: menu suspenso -->
@@ -329,6 +330,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
     <button class="nav-item" onclick="switchTabMenu('desconto',this,'🏷️ Desconto por Canal')">🏷️ Desconto por Canal</button>
     <button class="nav-item" onclick="switchTabMenu('anuncios',this,'🛒 Anúncios ML')">🛒 Anúncios ML</button>
     <button class="nav-item" onclick="switchTabMenu('abc',this,'📊 Curva ABC')">📊 Curva ABC</button>
+    <button class="nav-item" onclick="switchTabMenu('ranking',this,'🏍️ Ranking Marcas')">🏍️ Ranking Marcas</button>
   </div>
 </div>
 
@@ -657,6 +659,52 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
     </div>
   </div>
 
+  <!-- ABA RANKING MARCAS/MODELOS -->
+  <div class="page" id="page-ranking">
+    <div style="padding-top:1.5rem">
+      <div class="controls">
+        <label>Período:</label><select id="selMesRank"></select>
+        <label>Canal:</label>
+        <select id="selCanalRank">
+          <option value="all">Todos</option>
+          <option value="Balcão">Balcão</option>
+          <option value="Mercado Livre">Mercado Livre</option>
+        </select>
+        <label>Ver por:</label>
+        <select id="selCriterioRank">
+          <option value="fat">Faturamento (R$)</option>
+          <option value="qtd">Quantidade vendida</option>
+        </select>
+        <span class="tag" id="tagRank"></span>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">🏍️ Ranking por Marca</span></div>
+          <div id="rankMarcaConteudo"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">🔩 Ranking por Modelo</span></div>
+          <div id="rankModeloConteudo"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Detalhamento por marca</span>
+          <div class="export-group">
+            <button class="btn-export btn-xls" onclick="exportXLS('ranking')">⬇ Excel</button>
+            <button class="btn-export btn-pdf" onclick="exportPDF('ranking')">⬇ PDF</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table><thead><tr>
+            <th>#</th><th>Marca</th><th>Modelos</th><th>Vendas</th><th>Faturamento</th><th>Ticket Médio</th><th>% Fat.</th>
+          </tr></thead>
+          <tbody id="tRank"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 <footer>Sucatão do Major · sheldonthiago/dashboarcadastroibr</footer>
 
@@ -853,6 +901,7 @@ function switchTab(n,el){
     else initAEmpty();
   }
   if(n==='abc') renderABC();
+  if(n==='ranking') renderRanking();
 }
 
 /* ════════════════════════════════
@@ -1484,6 +1533,9 @@ document.getElementById('searchC').addEventListener('input',renderC);
 document.getElementById('selMesTaxa').addEventListener('change', renderTaxaTab);
 document.getElementById('selCanalTaxa').addEventListener('change', renderTaxaTab);
 document.getElementById('selMesDesconto').addEventListener('change', renderDescontoTab);
+document.getElementById('selMesRank').addEventListener('change', renderRanking);
+document.getElementById('selCanalRank').addEventListener('change', renderRanking);
+document.getElementById('selCriterioRank').addEventListener('change', renderRanking);
 document.getElementById('selCanalDesconto').addEventListener('change', renderDescontoTab);
 document.getElementById('selMesA').addEventListener('change',()=>{clickStatusA=null;clickListagemA=null;renderA();});
 document.getElementById('selStatusA').addEventListener('change',()=>{clickStatusA=null;renderA();});
@@ -1755,6 +1807,7 @@ function getFilteredData(type){
 function getHeaders(type){
   if(type==='anuncios') return ['Data','Código','SKU','Código MLB','Título','Status','Listagem','Envio','Frete Grátis','Anunciante'];
   if(type==='abc')      return ['#','Produto','Código','Canal','Qtd','Faturamento (R$)','% Fat.','% Acum.','Classe'];
+  if(type==='ranking')  return ['#','Marca','Modelos','Qtd Vendas','Faturamento (R$)','Ticket Médio (R$)','% Fat.'];
   if(type==='fotos')    return ['Data','Produto','Marca','Modelo','Foto'];
   if(type==='vendas')   return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)'];
   if(type==='canceladas') return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)','Motivo'];
@@ -1763,6 +1816,7 @@ function getHeaders(type){
 function rowToArray(type, r){
   if(type==='anuncios') return [r.d,r.cod,r.sku,r.mlb,r.titulo,r.status,r.listagem,r.envio,r.frete,r.anunciante];
   if(type==='abc')      return [r.rank,r.prod,r.cod||'',r.canal||'',r.qtd,'R$ '+fmt(r.fat),r.pctFat.toFixed(2)+'%',r.acum.toFixed(2)+'%',r.classe];
+  if(type==='ranking')  return [r.rank,r.marca,r.modelos,r.qtd,'R$ '+fmt(r.fat),'R$ '+fmt(r.ticket),r.pctFat.toFixed(1)+'%'];
   if(type==='fotos')      return [r.d, r.prod, r.marca, r.modelo, r.foto];
   if(type==='vendas')     return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot];
   if(type==='canceladas') return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot, r.motivo||''];
@@ -1771,6 +1825,7 @@ function rowToArray(type, r){
 function exportLabel(type){
   if(type==='anuncios') return 'Anuncios_ML';
   if(type==='abc')      return 'Curva_ABC';
+  if(type==='ranking')  return 'Ranking_Marcas';
   return {fotos:'Cadastro',vendas:'Vendas_Realizadas',canceladas:'Canceladas'}[type];
 }
 
@@ -2552,6 +2607,171 @@ document.addEventListener('click', e=>{
     document.getElementById('navArrow').classList.remove('open');
   }
 });
+
+
+/* ════════════════════════════════
+   ABA RANKING MARCAS/MODELOS
+════════════════════════════════ */
+let filteredRanking = [];
+
+// Dicionário de marcas — extrai do nome do produto
+const MARCAS_DICT = [
+  {marca:'Honda',    patterns:['HONDA','CBR','CG ','FAN ','TITAN','BROSS','XRE','NXR','CB ','PCX','ADV','LEAD','ELITE','TWISTER','FAZER HONDA','CB300','CB600','CB1000','HORNET']},
+  {marca:'Yamaha',   patterns:['YAMAHA','FAZER ','LANDER','CROSSER','NMAX','FACTOR','YBR','XTZ','MT-','R1','R3','R6','TENERE','XMAX','TÉNÉRÉ']},
+  {marca:'Kawasaki', patterns:['KAWASAKI','NINJA','Z 300','Z 400','Z 650','Z 900','VERSYS','W800','VULCAN']},
+  {marca:'Suzuki',   patterns:['SUZUKI','GSX','BANDIT','INTRUDER','VSTROM','V-STROM','BOULEVARD','BURGMAN','DR ']},
+  {marca:'BMW',      patterns:['BMW','G 310','G310','S1000','R1250','F 850','F850','GS BMW']},
+  {marca:'Triumph',  patterns:['TRIUMPH','TIGER ','STREET TRIPLE','BONNEVILLE','SCRAMBLER TRIUMPH','ROCKET','SPEED']},
+  {marca:'Royal Enfield',patterns:['ROYAL ENFIELD','HIMALAYAN','METEOR','BULLET','INTERCEPTOR','CONTINENTAL GT']},
+  {marca:'Dafra',    patterns:['DAFRA','RIVA','LASER','SPEED','HORIZON']},
+  {marca:'Shineray', patterns:['SHINERAY','PHOENIX']},
+  {marca:'Ford',     patterns:['FORD','SHELBY','MUSTANG']},
+];
+
+function detectarMarca(nomeProd) {
+  const upper = (nomeProd||'').toUpperCase();
+  for(const {marca, patterns} of MARCAS_DICT){
+    if(patterns.some(p => upper.includes(p))) return marca;
+  }
+  return 'Outros';
+}
+
+function detectarModelo(nomeProd) {
+  const upper = (nomeProd||'').toUpperCase();
+  // common model patterns
+  const modelos = [
+    'CB 600F','CB600','HORNET','CB 300','CB300','CB 1000','CB1000',
+    'FAN 160','FAN 125','CG 160','CG 150','TITAN 160','TITAN 150',
+    'BROS 160','BROS 150','BROSS','XRE 300','XRE300','NXR BROS',
+    'PCX 150','PCX 160','ADV 150','ADV 160','LEAD 110',
+    'FAZER 150','FAZER 250','YBR 125','FACTOR 150','LANDER 250',
+    'CROSSER 150','NMAX 160','XTZ 250','TÉNÉRÉ 250','TENERE 250',
+    'NINJA 300','NINJA 400','Z 650','Z 900','VERSYS 650',
+    'GSX-S 750','BANDIT 650','VSTROM 650','V-STROM',
+    'G 310 GS','G310GS','G 310 R','S1000RR',
+    'SAHARA 300','HIMALAYAN',
+    'TWISTER 250','CB 250','CB250',
+  ];
+  for(const m of modelos){
+    if(upper.includes(m.toUpperCase())) return m;
+  }
+  return null;
+}
+
+function renderRanking(){
+  if(!vendasProds.length){
+    document.getElementById('rankMarcaConteudo').innerHTML=
+      '<div style="font-size:13px;color:var(--muted);padding:1rem">Carregue Vendas Realizadas.</div>';
+    document.getElementById('rankModeloConteudo').innerHTML='';
+    return;
+  }
+
+  const mes      = document.getElementById('selMesRank').value;
+  const canal    = document.getElementById('selCanalRank').value;
+  const criterio = document.getElementById('selCriterioRank').value;
+
+  // popula select de mês
+  if(document.getElementById('selMesRank').options.length <= 1){
+    buildSel('selMesRank',[...new Set(vendasProds.map(r=>getMes(r.d)).filter(Boolean))]);
+  }
+
+  const prods = vendasProds.filter(r=>{
+    if(mes!=='all'&&getMes(r.d)!==mes)return false;
+    if(canal!=='all'&&r.canal!==canal)return false;
+    return true;
+  });
+
+  // agrupa por marca
+  const marcaMap = {};
+  prods.forEach(r=>{
+    const marca = detectarMarca(r.prod);
+    const modelo = detectarModelo(r.prod);
+    if(!marcaMap[marca]) marcaMap[marca]={marca,qtd:0,fat:0,modelos:new Set()};
+    marcaMap[marca].qtd++;
+    marcaMap[marca].fat = Math.round((marcaMap[marca].fat + r.tot)*100)/100;
+    if(modelo) marcaMap[marca].modelos.add(modelo);
+  });
+
+  const totalFat = prods.reduce((s,r)=>s+r.tot,0);
+  const totalQtd = prods.length;
+
+  let marcas = Object.values(marcaMap)
+    .sort((a,b)=> criterio==='fat' ? b.fat-a.fat : b.qtd-a.qtd)
+    .map((m,i)=>({
+      ...m,
+      rank:i+1,
+      modelos:[...m.modelos].slice(0,5).join(', ')||'—',
+      ticket: m.qtd ? m.fat/m.qtd : 0,
+      pctFat: totalFat ? m.fat/totalFat*100 : 0,
+    }));
+
+  filteredRanking = marcas;
+  document.getElementById('tagRank').textContent = prods.length+' vendas / '+marcas.length+' marcas';
+
+  // ── GRÁFICO MARCAS (barras horizontais) ──
+  const top10 = marcas.slice(0,10);
+  const maxVal = top10[0] ? (criterio==='fat'?top10[0].fat:top10[0].qtd) : 1;
+  const cores = ['#22c48a','#5b9cf6','#f0a030','#f06060','#a78bfa','#22c48a','#5b9cf6','#f0a030','#f06060','#a78bfa'];
+
+  document.getElementById('rankMarcaConteudo').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${top10.map((m,i)=>`
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="font-weight:500;color:var(--text)">${m.rank}. ${m.marca}</span>
+            <span style="font-family:'DM Mono',monospace;color:${cores[i]};font-weight:600">
+              ${criterio==='fat'?'R$ '+fmt(m.fat):m.qtd+' vendas'}
+            </span>
+          </div>
+          <div style="background:var(--surface2);border-radius:4px;height:10px;overflow:hidden">
+            <div style="height:100%;width:${(criterio==='fat'?m.fat:m.qtd)/maxVal*100}%;background:${cores[i]};border-radius:4px;transition:width .4s"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${m.qtd} vendas · ${m.pctFat.toFixed(1)}% do fat.</div>
+        </div>`).join('')}
+    </div>`;
+
+  // ── GRÁFICO MODELOS ──
+  const modeloMap = {};
+  prods.forEach(r=>{
+    const mod = detectarModelo(r.prod) || 'Outros';
+    if(!modeloMap[mod]) modeloMap[mod]={modelo:mod,qtd:0,fat:0};
+    modeloMap[mod].qtd++;
+    modeloMap[mod].fat = Math.round((modeloMap[mod].fat+r.tot)*100)/100;
+  });
+  const top10mod = Object.values(modeloMap)
+    .sort((a,b)=>criterio==='fat'?b.fat-a.fat:b.qtd-a.qtd)
+    .slice(0,10);
+  const maxMod = top10mod[0] ? (criterio==='fat'?top10mod[0].fat:top10mod[0].qtd) : 1;
+
+  document.getElementById('rankModeloConteudo').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${top10mod.map((m,i)=>`
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="font-weight:500;color:var(--text)">${i+1}. ${m.modelo}</span>
+            <span style="font-family:'DM Mono',monospace;color:${cores[i]};font-weight:600">
+              ${criterio==='fat'?'R$ '+fmt(m.fat):m.qtd+' vendas'}
+            </span>
+          </div>
+          <div style="background:var(--surface2);border-radius:4px;height:10px;overflow:hidden">
+            <div style="height:100%;width:${(criterio==='fat'?m.fat:m.qtd)/maxMod*100}%;background:${cores[i]};border-radius:4px;transition:width .4s"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${m.qtd} vendas · R$ ${fmt(m.fat)}</div>
+        </div>`).join('')}
+    </div>`;
+
+  // ── TABELA ──
+  document.getElementById('tRank').innerHTML = marcas.map(m=>`
+    <tr>
+      <td class="num" style="color:var(--muted)">${m.rank}</td>
+      <td style="font-weight:500">${m.marca}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.modelos}</td>
+      <td class="num">${m.qtd}</td>
+      <td class="num" style="color:var(--green)">R$ ${fmt(m.fat)}</td>
+      <td class="num">R$ ${fmt(m.ticket)}</td>
+      <td class="num"><span class="badge ${m.pctFat>=20?'bg':m.pctFat>=10?'ba':'bb'}">${m.pctFat.toFixed(1)}%</span></td>
+    </tr>`).join('');
+}
 
 boot();
 </script>
