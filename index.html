@@ -33,9 +33,43 @@ header{display:flex;align-items:center;justify-content:space-between;padding:1.1
 .btn-green{background:var(--green);color:#0a1a12}.btn-blue{background:var(--blue);color:#05112b}
 .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}.btn-red{background:var(--red);color:#fff}
 .btn:hover{opacity:.8}.btn:disabled{opacity:.4;cursor:not-allowed}
-.tabs{display:flex;gap:2px;padding:0 2rem;border-bottom:1px solid var(--border);background:var(--bg)}
-.tab{padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:'DM Sans',sans-serif}
-.tab:hover{color:var(--text)}.tab.active{color:var(--text);border-bottom-color:var(--green)}
+.nav-bar{
+  position:relative;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+  padding:0 2rem;
+}
+.nav-current{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;cursor:pointer;
+  background:var(--surface);border-radius:8px;margin:8px 0;
+  border:1px solid var(--border2);
+  font-size:14px;font-weight:500;color:var(--text);
+  user-select:none;transition:border-color .15s;
+}
+.nav-current:hover{border-color:var(--green)}
+.nav-arrow{font-size:12px;color:var(--muted);transition:transform .2s}
+.nav-arrow.open{transform:rotate(180deg)}
+.nav-menu{
+  display:none;position:absolute;top:100%;left:2rem;right:2rem;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--rl);z-index:150;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  overflow:hidden;
+}
+.nav-menu.open{display:block}
+.nav-item{
+  display:flex;align-items:center;width:100%;
+  padding:12px 16px;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;background:none;
+  color:var(--muted);text-align:left;
+  font-family:'DM Sans',sans-serif;
+  transition:background .15s,color .15s;
+  border-bottom:1px solid var(--border);
+}
+.nav-item:last-child{border-bottom:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{color:var(--green);background:var(--green-dim)}
 .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:2rem;max-width:460px;width:90%;position:relative}
@@ -147,21 +181,10 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   #btnMobileMenu{display:inline-flex !important}
 
   /* tabs scroll horizontal */
-  .tabs{
-    padding:0 .5rem;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-    flex-wrap:nowrap;
-    border-bottom:1px solid var(--border);
-  }
-  .tabs::-webkit-scrollbar{display:none}
-  .tab{
-    padding:8px 10px;
-    font-size:11px;
-    white-space:nowrap;
-    flex-shrink:0;
-  }
+  .nav-bar{padding:0 .75rem}
+  .nav-current{padding:8px 12px;font-size:13px}
+  .nav-menu{left:.75rem;right:.75rem}
+  .nav-item{padding:11px 14px;font-size:13px}
 
   /* main */
   #main{padding:.75rem}
@@ -2461,6 +2484,36 @@ function renderDescontoTab(){
       </div>
     </div>`;
 }
+
+
+function toggleNavMenu(){
+  const menu = document.getElementById('navMenu');
+  const arrow = document.getElementById('navArrow');
+  menu.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function switchTabMenu(name, el, label){
+  // update label
+  document.getElementById('navLabel').textContent = label;
+  // close menu
+  document.getElementById('navMenu').classList.remove('open');
+  document.getElementById('navArrow').classList.remove('open');
+  // update active item
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  // switch tab content
+  switchTab(name, el);
+}
+
+// close menu when clicking outside
+document.addEventListener('click', e=>{
+  const nav = document.querySelector('.nav-bar');
+  if(nav && !nav.contains(e.target)){
+    document.getElementById('navMenu').classList.remove('open');
+    document.getElementById('navArrow').classList.remove('open');
+  }
+});
 
 boot();
 </script>
