@@ -720,6 +720,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
           <option value="Mercado Livre">Mercado Livre</option>
         </select>
         <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="renderComparativo()">↻ Aplicar</button>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="resetComparativo()">✕ Reset</button>
         <span class="tag" id="tagComp"></span>
       </div>
       <div class="kpi-grid" id="kpiComp"></div>
@@ -2825,6 +2826,15 @@ function renderRanking(){
 ════════════════════════════════ */
 let filteredComp = [];
 let cComp = null, cGrowth = null;
+
+
+function resetComparativo(){
+  // limpa selects para forçar reconstrução com padrão (últimos 6 meses)
+  document.getElementById('selMesCompDe').innerHTML='<option value="all">Início</option>';
+  document.getElementById('selMesCompAte').innerHTML='<option value="all">Fim</option>';
+  document.getElementById('selCanalComp').value='all';
+  renderComparativo();
+}
 
 function renderComparativo(){
   if(!vendasProds.length){
