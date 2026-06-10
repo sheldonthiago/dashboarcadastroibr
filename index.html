@@ -315,6 +315,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <button class="tab" onclick="switchTab('abc',this)">📊 Curva ABC</button>
   <button class="tab" onclick="switchTab('ranking',this)">🏍️ Ranking Marcas</button>
   <button class="tab" onclick="switchTab('comparativo',this)">📈 Comparativo</button>
+  <button class="tab" onclick="switchTab('semvenda',this)">🔍 Sem Venda ML</button>
 </div>
 
 <!-- MOBILE: menu suspenso -->
@@ -333,6 +334,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
     <button class="nav-item" onclick="switchTabMenu('abc',this,'📊 Curva ABC')">📊 Curva ABC</button>
     <button class="nav-item" onclick="switchTabMenu('ranking',this,'🏍️ Ranking Marcas')">🏍️ Ranking Marcas</button>
     <button class="nav-item" onclick="switchTabMenu('comparativo',this,'📈 Comparativo')">📈 Comparativo</button>
+    <button class="nav-item" onclick="switchTabMenu('semvenda',this,'🔍 Sem Venda ML')">🔍 Sem Venda ML</button>
   </div>
 </div>
 
@@ -745,6 +747,44 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
     </div>
   </div>
 
+  <!-- ABA ANÚNCIOS SEM VENDA ML -->
+  <div class="page" id="page-semvenda">
+    <div style="padding-top:1.5rem">
+      <div class="controls">
+        <label>Listagem:</label>
+        <select id="selListSV">
+          <option value="all">Todas</option>
+          <option value="Premium">Premium</option>
+          <option value="Clássico">Clássico</option>
+        </select>
+        <label>Anunciante:</label>
+        <select id="selAnuncSV"><option value="all">Todos</option></select>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchSV" placeholder="Buscar título ou código..."></div>
+        <span class="tag" id="tagSV"></span>
+      </div>
+      <div class="kpi-grid" id="kpiSV"></div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Anúncios ativos sem venda registrada no ML</span>
+          <div class="export-group">
+            <button class="btn-export btn-xls" onclick="exportXLS('semvenda')">⬇ Excel</button>
+            <button class="btn-export btn-pdf" onclick="exportPDF('semvenda')">⬇ PDF</button>
+          </div>
+        </div>
+        <div id="svAviso" style="font-size:13px;color:var(--amber);background:var(--amber-dim);padding:10px 14px;border-radius:8px;margin-bottom:1rem;display:none">
+          ⚠ O cruzamento é feito por similaridade de nome — anúncios com vendas registradas em outros períodos podem aparecer aqui se o arquivo de vendas não cobrir todo o histórico.
+        </div>
+        <div class="tw">
+          <table><thead><tr>
+            <th>Código</th><th>Título</th><th>Listagem</th><th>Frete</th><th>Anunciante</th><th>Publicado em</th>
+          </tr></thead>
+          <tbody id="tSV"></tbody>
+        </table></div>
+        <div class="pagination" id="pagSV"></div>
+      </div>
+    </div>
+  </div>
+
 
 <footer>Sucatão do Major · sheldonthiago/dashboarcadastroibr</footer>
 
@@ -943,6 +983,7 @@ function switchTab(n,el){
   if(n==='abc') renderABC();
   if(n==='ranking') renderRanking();
   if(n==='comparativo') renderComparativo();
+  if(n==='semvenda') renderSemVenda();
 }
 
 /* ════════════════════════════════
@@ -1579,6 +1620,9 @@ document.getElementById('selCanalRank').addEventListener('change', renderRanking
 document.getElementById('selCriterioRank').addEventListener('change', renderRanking);
 document.getElementById('selCanalComp').addEventListener('change', renderComparativo);
 document.getElementById('selMesCompDe').addEventListener('change', renderComparativo);
+document.getElementById('selListSV').addEventListener('change', renderSemVenda);
+document.getElementById('selAnuncSV').addEventListener('change', renderSemVenda);
+document.getElementById('searchSV').addEventListener('input', renderSemVenda);
 document.getElementById('selMesCompAte').addEventListener('change', renderComparativo);
 document.getElementById('selCanalDesconto').addEventListener('change', renderDescontoTab);
 document.getElementById('selMesA').addEventListener('change',()=>{clickStatusA=null;clickListagemA=null;renderA();});
@@ -1853,6 +1897,7 @@ function getHeaders(type){
   if(type==='abc')      return ['#','Produto','Código','Canal','Qtd','Faturamento (R$)','% Fat.','% Acum.','Classe'];
   if(type==='ranking')  return ['#','Marca','Modelos','Qtd Vendas','Faturamento (R$)','Ticket Médio (R$)','% Fat.'];
   if(type==='comparativo') return ['Mês','Realizado (R$)','Cancelado (R$)','Líquido (R$)','Qtd Vendas','Ticket Médio (R$)','Cresc. Fat. (%)','Cresc. Qtd (%)'];
+  if(type==='semvenda')   return ['Código','Título','Listagem','Frete','Anunciante','Publicado em'];
   if(type==='fotos')    return ['Data','Produto','Marca','Modelo','Foto'];
   if(type==='vendas')   return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)'];
   if(type==='canceladas') return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)','Motivo'];
@@ -1863,6 +1908,7 @@ function rowToArray(type, r){
   if(type==='abc')      return [r.rank,r.prod,r.cod||'',r.canal||'',r.qtd,'R$ '+fmt(r.fat),r.pctFat.toFixed(2)+'%',r.acum.toFixed(2)+'%',r.classe];
   if(type==='ranking')  return [r.rank,r.marca,r.modelos,r.qtd,'R$ '+fmt(r.fat),'R$ '+fmt(r.ticket),r.pctFat.toFixed(1)+'%'];
   if(type==='comparativo') return [r.mesLabel,'R$ '+fmt(r.fat),'R$ '+fmt(r.canc),'R$ '+fmt(r.liq),r.qtd,'R$ '+fmt(r.ticket),r.crescFat!==null?r.crescFat.toFixed(1)+'%':'—',r.crescQtd!==null?r.crescQtd.toFixed(1)+'%':'—'];
+  if(type==='semvenda')   return [r.cod,r.titulo,r.listagem,r.frete,r.anunciante,r.d];
   if(type==='fotos')      return [r.d, r.prod, r.marca, r.modelo, r.foto];
   if(type==='vendas')     return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot];
   if(type==='canceladas') return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot, r.motivo||''];
@@ -1873,6 +1919,7 @@ function exportLabel(type){
   if(type==='abc')      return 'Curva_ABC';
   if(type==='ranking')  return 'Ranking_Marcas';
   if(type==='comparativo') return 'Comparativo_Mensal';
+  if(type==='semvenda')   return 'Anuncios_Sem_Venda';
   return {fotos:'Cadastro',vendas:'Vendas_Realizadas',canceladas:'Canceladas'}[type];
 }
 
@@ -3016,6 +3063,114 @@ function renderComparativo(){
       <td class="num" style="color:${corCresc(r.crescFat)}">${fmtCresc(r.crescFat)}</td>
       <td class="num" style="color:${corCresc(r.crescQtd)}">${fmtCresc(r.crescQtd)}</td>
     </tr>`).join('');
+}
+
+
+/* ════════════════════════════════
+   ABA ANÚNCIOS SEM VENDA ML
+════════════════════════════════ */
+let filteredSemVenda = [];
+let pSV = 1;
+
+// normaliza string para comparação fuzzy
+function normStr(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // remove acentos
+    .replace(/[^a-z0-9 ]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+// extrai palavras-chave de um título (remove stopwords)
+function keywords(s){
+  const stop=new Set(['de','do','da','dos','das','a','o','e','em','para','com','sem','por','no','na','nos','nas','ao','aos','as','um','uma','uns','umas','le','la']);
+  return normStr(s).split(' ').filter(w=>w.length>2&&!stop.has(w));
+}
+
+// retorna score de similaridade entre dois títulos (0-1)
+function similarity(t1, t2){
+  const k1=new Set(keywords(t1));
+  const k2=new Set(keywords(t2));
+  if(!k1.size||!k2.size) return 0;
+  let match=0;
+  k1.forEach(w=>{if(k2.has(w))match++;});
+  return match/Math.max(k1.size,k2.size);
+}
+
+function renderSemVenda(){
+  const el = document.getElementById('kpiSV');
+  if(!anunciosProds.length){
+    el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted)">Carregue os dados de <strong>Anúncios ML</strong>.</div>';
+    return;
+  }
+  if(!vendasProds.length){
+    el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted)">Carregue os dados de <strong>Vendas Realizadas</strong>.</div>';
+    return;
+  }
+
+  // popula select de anunciante
+  const selAnunc = document.getElementById('selAnuncSV');
+  if(selAnunc.options.length<=1){
+    const anunciantes=[...new Set(anunciosProds.filter(p=>p.status==='Ativo').map(p=>p.anunciante).filter(Boolean))].sort();
+    anunciantes.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;selAnunc.appendChild(o);});
+  }
+
+  const listagem  = document.getElementById('selListSV').value;
+  const anunciante= document.getElementById('selAnuncSV').value;
+  const q         = (document.getElementById('searchSV').value||'').toLowerCase().trim();
+
+  // pega só ativos
+  const ativos = anunciosProds.filter(p=>{
+    if(p.status!=='Ativo') return false;
+    if(listagem!=='all'&&p.listagem!==listagem) return false;
+    if(anunciante!=='all'&&p.anunciante!==anunciante) return false;
+    if(q&&!p.titulo.toLowerCase().includes(q)&&!p.cod.includes(q)) return false;
+    return true;
+  });
+
+  // vendas ML — títulos normalizados para comparação
+  const mlVendas = vendasProds.filter(r=>r.canal==='Mercado Livre');
+  const mlTitulos = mlVendas.map(r=>r.prod);
+
+  // threshold: se similaridade >= 0.45 considera que houve venda
+  const THRESHOLD = 0.45;
+
+  const semVenda = ativos.filter(an=>{
+    // verifica se alguma venda ML tem título parecido com o anúncio
+    return !mlTitulos.some(t=>similarity(an.titulo, t) >= THRESHOLD);
+  });
+
+  const comVenda = ativos.length - semVenda.length;
+
+  filteredSemVenda = semVenda;
+  document.getElementById('tagSV').textContent = semVenda.length+' sem venda';
+  document.getElementById('svAviso').style.display = mlVendas.length < 50 ? 'block' : 'none';
+
+  // KPIs
+  renderKPI('kpiSV',[
+    {l:'Ativos sem venda', v:semVenda.length.toLocaleString('pt-BR'),  s:'anúncios ativos',          c:'var(--red)'},
+    {l:'Com venda',        v:comVenda.toLocaleString('pt-BR'),          s:'cruzamento por nome',      c:'var(--green)'},
+    {l:'Total ativos',     v:ativos.length.toLocaleString('pt-BR'),     s:'filtro atual',             c:'var(--blue)'},
+    {l:'% sem venda',      v:ativos.length?Math.round(semVenda.length/ativos.length*100)+'%':'—', s:'do total ativo', c:'var(--amber)'},
+    {l:'Vendas ML base',   v:mlVendas.length.toLocaleString('pt-BR'),   s:'usadas no cruzamento',     c:'var(--muted)'},
+  ]);
+
+  // Tabela
+  pSV=1;
+  renderPageSV();
+}
+
+function renderPageSV(){
+  const slice=filteredSemVenda.slice((pSV-1)*PER_PAGE, pSV*PER_PAGE);
+  document.getElementById('tSV').innerHTML=slice.map(r=>`
+    <tr>
+      <td class="num" style="color:var(--muted)">${r.cod||'—'}</td>
+      <td class="prod-name" style="max-width:360px" title="${esc(r.titulo)}">${esc(r.titulo)||'—'}</td>
+      <td><span class="badge ${r.listagem==='Premium'?'bp':''}" style="${r.listagem!=='Premium'?'color:var(--muted)':''}">${r.listagem||'—'}</span></td>
+      <td><span class="badge ${r.frete==='Sim'?'bg':'br'}">${r.frete||'—'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${r.anunciante||'—'}</td>
+      <td class="num">${r.d||'—'}</td>
+    </tr>`).join('');
+  renderPag('pagSV',filteredSemVenda.length,pSV,p=>{pSV=p;renderPageSV();});
 }
 
 boot();
