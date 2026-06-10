@@ -711,12 +711,15 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <div class="page" id="page-comparativo">
     <div style="padding-top:1.5rem">
       <div class="controls">
+        <label>De:</label><select id="selMesCompDe"></select>
+        <label>Até:</label><select id="selMesCompAte"></select>
         <label>Canal:</label>
         <select id="selCanalComp">
           <option value="all">Todos</option>
           <option value="Balcão">Balcão</option>
           <option value="Mercado Livre">Mercado Livre</option>
         </select>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="renderComparativo()">↻ Aplicar</button>
         <span class="tag" id="tagComp"></span>
       </div>
       <div class="kpi-grid" id="kpiComp"></div>
@@ -1574,6 +1577,8 @@ document.getElementById('selMesRank').addEventListener('change', renderRanking);
 document.getElementById('selCanalRank').addEventListener('change', renderRanking);
 document.getElementById('selCriterioRank').addEventListener('change', renderRanking);
 document.getElementById('selCanalComp').addEventListener('change', renderComparativo);
+document.getElementById('selMesCompDe').addEventListener('change', renderComparativo);
+document.getElementById('selMesCompAte').addEventListener('change', renderComparativo);
 document.getElementById('selCanalDesconto').addEventListener('change', renderDescontoTab);
 document.getElementById('selMesA').addEventListener('change',()=>{clickStatusA=null;clickListagemA=null;renderA();});
 document.getElementById('selStatusA').addEventListener('change',()=>{clickStatusA=null;renderA();});
@@ -2829,16 +2834,54 @@ function renderComparativo(){
   }
 
   const canal = document.getElementById('selCanalComp').value;
+  const sortMesVal=m=>{const[mm,yy]=m.split('/');return +yy*100+ +mm;};
 
-  const filtV = vendasProds.filter(r=>canal==='all'||r.canal===canal);
-  const filtC = cancelProds.filter(r=>canal==='all'||r.canal===canal);
+  // popula selects De/Até na primeira chamada
+  const todosVMeses=[...new Set(vendasProds.map(r=>getMes(r.d)).filter(Boolean))].sort((a,b)=>sortMesVal(a)-sortMesVal(b));
+  const selDe=document.getElementById('selMesCompDe');
+  const selAte=document.getElementById('selMesCompAte');
+  if(selDe.options.length<=1){
+    const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    selDe.innerHTML='<option value="all">Início</option>';
+    selAte.innerHTML='<option value="all">Fim</option>';
+    todosVMeses.forEach(m=>{
+      const[mm,yy]=m.split('/');
+      const lbl=nm[parseInt(mm)]+' '+yy;
+      selDe.innerHTML+=`<option value="${m}">${lbl}</option>`;
+      selAte.innerHTML+=`<option value="${m}">${lbl}</option>`;
+    });
+    // default: último 6 meses
+    if(todosVMeses.length>1){
+      const startIdx=Math.max(0,todosVMeses.length-6);
+      selDe.value=todosVMeses[startIdx];
+      selAte.value=todosVMeses[todosVMeses.length-1];
+    }
+  }
+
+  const mesDeVal  = selDe.value;
+  const mesAteVal = selAte.value;
+
+  const filtV = vendasProds.filter(r=>{
+    if(canal!=='all'&&r.canal!==canal)return false;
+    const mv=getMes(r.d);if(!mv)return false;
+    if(mesDeVal!=='all'&&sortMesVal(mv)<sortMesVal(mesDeVal))return false;
+    if(mesAteVal!=='all'&&sortMesVal(mv)>sortMesVal(mesAteVal))return false;
+    return true;
+  });
+  const filtC = cancelProds.filter(r=>{
+    if(canal!=='all'&&r.canal!==canal)return false;
+    const mv=getMes(r.d);if(!mv)return false;
+    if(mesDeVal!=='all'&&sortMesVal(mv)<sortMesVal(mesDeVal))return false;
+    if(mesAteVal!=='all'&&sortMesVal(mv)>sortMesVal(mesAteVal))return false;
+    return true;
+  });
 
   // agrupa por mês
   const getMesLabel = m=>{
     const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
     const[mm,yy]=m.split('/');return nm[parseInt(mm)]+'/'+(yy.slice(2));
   };
-  const sortMes=(a,b)=>{const[ma,ya]=a.split('/');const[mb,yb]=b.split('/');return(+ya*100+ +ma)-(+yb*100+ +mb);};
+  const sortMes=(a,b)=>sortMesVal(a)-sortMesVal(b);
 
   const meses=[...new Set([...filtV,...filtC].map(r=>getMes(r.d)).filter(Boolean))].sort(sortMes);
 
