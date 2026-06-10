@@ -2270,7 +2270,7 @@ function renderPageA(){
 
 function procAnuncios(rows){
   const keys=Object.keys(rows[0]||{});
-  const cCod =keys.find(k=>/código do produto/i.test(k))||'Código do Produto';
+  const cCod =keys.find(k=>/^código$/i.test(k))||keys.find(k=>/código do produto/i.test(k))||'Código';
   const cSku =keys.find(k=>/^sku$/i.test(k))||'SKU';
   const cMlb =keys.find(k=>/código mlb/i.test(k))||'Código MLB';
   const cTit =keys.find(k=>/título/i.test(k))||'Título';
@@ -3127,23 +3127,23 @@ function renderSemVenda(){
     return true;
   });
 
-  // vendas ML — títulos normalizados para comparação
   const mlVendas = vendasProds.filter(r=>r.canal==='Mercado Livre');
-  const mlTitulos = mlVendas.map(r=>r.prod);
 
-  // threshold: se similaridade >= 0.45 considera que houve venda
-  const THRESHOLD = 0.45;
+  // cruzamento: cod da venda (IBR) = sku do anúncio (ML)
+  const mlCods = new Set(mlVendas.map(r=>String(r.cod||'').trim()).filter(Boolean));
 
   const semVenda = ativos.filter(an=>{
-    // verifica se alguma venda ML tem título parecido com o anúncio
-    return !mlTitulos.some(t=>similarity(an.titulo, t) >= THRESHOLD);
+    const sku = String(an.sku||'').trim();
+    if(!sku) return true; // sem SKU — considera sem venda
+    return !mlCods.has(sku);
   });
 
   const comVenda = ativos.length - semVenda.length;
 
   filteredSemVenda = semVenda;
   document.getElementById('tagSV').textContent = semVenda.length+' sem venda';
-  document.getElementById('svAviso').style.display = mlVendas.length < 50 ? 'block' : 'none';
+  document.getElementById('svAviso').innerHTML = '⚠ Cruzamento por <strong>código do produto (SKU)</strong>. Anúncios com vendas em períodos não cobertos pelo arquivo de vendas atual podem aparecer aqui.';
+  document.getElementById('svAviso').style.display = 'block';
 
   // KPIs
   renderKPI('kpiSV',[
