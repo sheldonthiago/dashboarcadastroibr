@@ -568,6 +568,8 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
         <select id="selStatusA"><option value="all">Todos</option><option value="Ativo">Ativo</option><option value="Pausado">Pausado</option><option value="Sob Revisão">Sob Revisão</option><option value="Finalizado">Finalizado</option><option value="Inativo">Inativo</option></select>
         <label>Listagem:</label>
         <select id="selListagemA"><option value="all">Todas</option><option value="Premium">Premium</option><option value="Clássico">Clássico</option></select>
+        <label>Conta:</label>
+        <select id="selContaA"><option value="all">Todas</option></select>
         <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchA" placeholder="Buscar título, código, MLB..."></div>
         <span id="activeFilterA" style="display:none"></span>
         <span class="tag" id="tagA"></span>
@@ -757,6 +759,8 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
           <option value="Premium">Premium</option>
           <option value="Clássico">Clássico</option>
         </select>
+        <label>Conta:</label>
+        <select id="selContaSV"><option value="all">Todas</option></select>
         <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchSV" placeholder="Buscar título ou código..."></div>
         <span class="tag" id="tagSV"></span>
       </div>
@@ -774,7 +778,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
         </div>
         <div class="tw">
           <table><thead><tr>
-            <th>Código</th><th>Título</th><th>Listagem</th><th>Frete</th><th>Anunciante</th><th>Publicado em</th>
+            <th>Código</th><th>Título</th><th>Listagem</th><th>Frete</th><th>Anunciante</th><th>Conta</th><th>Publicado em</th>
           </tr></thead>
           <tbody id="tSV"></tbody>
         </table></div>
@@ -1619,6 +1623,7 @@ document.getElementById('selCriterioRank').addEventListener('change', renderRank
 document.getElementById('selCanalComp').addEventListener('change', renderComparativo);
 document.getElementById('selMesCompDe').addEventListener('change', renderComparativo);
 document.getElementById('selListSV').addEventListener('change', renderSemVenda);
+document.getElementById('selContaSV').addEventListener('change', renderSemVenda);
 document.getElementById('searchSV').addEventListener('input', renderSemVenda);
 document.getElementById('selMesCompAte').addEventListener('change', renderComparativo);
 document.getElementById('selCanalDesconto').addEventListener('change', renderDescontoTab);
@@ -1633,6 +1638,7 @@ document.getElementById('selClasseABC').addEventListener('change',()=>{
   renderABC();
 });
 document.getElementById('selListagemA').addEventListener('change',()=>{clickListagemA=null;renderA();});
+document.getElementById('selContaA').addEventListener('change',renderA);
 document.getElementById('searchA').addEventListener('input',renderA);
 
 ['ovUpload','ovPub','ovToken'].forEach(id=>{
@@ -1890,22 +1896,22 @@ function getFilteredData(type){
 }
 
 function getHeaders(type){
-  if(type==='anuncios') return ['Data','Código','SKU','Código MLB','Título','Status','Listagem','Envio','Frete Grátis','Anunciante'];
+  if(type==='anuncios') return ['Data','Código','SKU','Código MLB','Título','Status','Listagem','Envio','Frete Grátis','Anunciante','Conta'];
   if(type==='abc')      return ['#','Produto','Código','Canal','Qtd','Faturamento (R$)','% Fat.','% Acum.','Classe'];
   if(type==='ranking')  return ['#','Marca','Modelos','Qtd Vendas','Faturamento (R$)','Ticket Médio (R$)','% Fat.'];
   if(type==='comparativo') return ['Mês','Realizado (R$)','Cancelado (R$)','Líquido (R$)','Qtd Vendas','Ticket Médio (R$)','Cresc. Fat. (%)','Cresc. Qtd (%)'];
-  if(type==='semvenda')   return ['Código','Título','Listagem','Frete','Anunciante','Publicado em'];
+  if(type==='semvenda')   return ['Código','Título','Listagem','Frete','Anunciante','Conta','Publicado em'];
   if(type==='fotos')    return ['Data','Produto','Marca','Modelo','Foto'];
   if(type==='vendas')   return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)'];
   if(type==='canceladas') return ['Data','Código','Produto','Canal','Valor (R$)','Desconto (R$)','Total (R$)','Motivo'];
 }
 
 function rowToArray(type, r){
-  if(type==='anuncios') return [r.d,r.cod,r.sku,r.mlb,r.titulo,r.status,r.listagem,r.envio,r.frete,r.anunciante];
+  if(type==='anuncios') return [r.d,r.cod,r.sku,r.mlb,r.titulo,r.status,r.listagem,r.envio,r.frete,r.anunciante,r.conta];
   if(type==='abc')      return [r.rank,r.prod,r.cod||'',r.canal||'',r.qtd,'R$ '+fmt(r.fat),r.pctFat.toFixed(2)+'%',r.acum.toFixed(2)+'%',r.classe];
   if(type==='ranking')  return [r.rank,r.marca,r.modelos,r.qtd,'R$ '+fmt(r.fat),'R$ '+fmt(r.ticket),r.pctFat.toFixed(1)+'%'];
   if(type==='comparativo') return [r.mesLabel,'R$ '+fmt(r.fat),'R$ '+fmt(r.canc),'R$ '+fmt(r.liq),r.qtd,'R$ '+fmt(r.ticket),r.crescFat!==null?r.crescFat.toFixed(1)+'%':'—',r.crescQtd!==null?r.crescQtd.toFixed(1)+'%':'—'];
-  if(type==='semvenda')   return [r.cod,r.titulo,r.listagem,r.frete,r.anunciante,r.d];
+  if(type==='semvenda')   return [r.cod,r.titulo,r.listagem,r.frete,r.anunciante,r.conta,r.d];
   if(type==='fotos')      return [r.d, r.prod, r.marca, r.modelo, r.foto];
   if(type==='vendas')     return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot];
   if(type==='canceladas') return [r.d, r.cod||'', r.prod, r.canal, r.val, r.desc, r.tot, r.motivo||''];
@@ -2052,6 +2058,12 @@ let cAS=null,cAL=null;
 
 function buildMesSelectA(){
   if(!anunciosProds.length) return;
+  // popula select de conta
+  const selConta=document.getElementById('selContaA');
+  if(selConta&&selConta.options.length<=1){
+    const contas=[...new Set(anunciosProds.map(p=>p.conta).filter(Boolean))].sort();
+    contas.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selConta.appendChild(o);});
+  }
   const nm=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const meses=[...new Set(
     anunciosProds.map(r=>r.d&&r.d.includes('/')?getMes(r.d):null).filter(Boolean)
@@ -2093,10 +2105,13 @@ function renderA(){
 
   const getMesA=d=>{if(!d||!d.includes('/'))return'';const p=d.split('/');return p.length===3?p[1]+'/'+p[2]:'';}
 
+  const conta=document.getElementById('selContaA').value;
+
   const prods=anunciosProds.filter(r=>{
     if(mes!=='all'&&getMesA(r.d)!==mes)return false;
     if(status!=='all'&&r.status!==status)return false;
     if(listagem!=='all'&&r.listagem!==listagem)return false;
+    if(conta!=='all'&&r.conta!==conta)return false;
     if(q&&!r.titulo.toLowerCase().includes(q)&&!r.mlb.toLowerCase().includes(q)&&!String(r.cod).toLowerCase().includes(q))return false;
     if(clickStatusA&&r.status!==clickStatusA)return false;
     if(clickListagemA&&r.listagem!==clickListagemA)return false;
@@ -2261,6 +2276,7 @@ function renderPageA(){
       <td style="font-size:12px;color:var(--muted)">${r.envio||'—'}</td>
       <td><span class="badge ${r.frete==='Sim'?'bg':'br'}">${r.frete||'—'}</span></td>
       <td style="font-size:12px;color:var(--muted)">${r.anunciante||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${r.conta||'—'}</td>
     </tr>`).join('');
   renderPag('pagA',prods.length,pA,p=>{pA=p;renderPageA();});
 }
@@ -3104,13 +3120,22 @@ function renderSemVenda(){
     return;
   }
 
-  const listagem = document.getElementById('selListSV').value;
-  const q        = (document.getElementById('searchSV').value||'').toLowerCase().trim();
+  const listagem  = document.getElementById('selListSV').value;
+  const contaSV   = document.getElementById('selContaSV').value;
+  const q         = (document.getElementById('searchSV').value||'').toLowerCase().trim();
+
+  // popula select conta SV
+  const selCSV=document.getElementById('selContaSV');
+  if(selCSV&&selCSV.options.length<=1){
+    const contas=[...new Set(anunciosProds.filter(p=>p.status==='Ativo').map(p=>p.conta).filter(Boolean))].sort();
+    contas.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCSV.appendChild(o);});
+  }
 
   // pega só ativos
   const ativos = anunciosProds.filter(p=>{
     if(p.status!=='Ativo') return false;
     if(listagem!=='all'&&p.listagem!==listagem) return false;
+    if(contaSV!=='all'&&p.conta!==contaSV) return false;
     if(q&&!p.titulo.toLowerCase().includes(q)&&!String(p.sku||'').includes(q)) return false;
     return true;
   });
@@ -3157,6 +3182,7 @@ function renderPageSV(){
       <td><span class="badge ${r.listagem==='Premium'?'bp':''}" style="${r.listagem!=='Premium'?'color:var(--muted)':''}">${r.listagem||'—'}</span></td>
       <td><span class="badge ${r.frete==='Sim'?'bg':'br'}">${r.frete||'—'}</span></td>
       <td style="font-size:12px;color:var(--muted)">${r.anunciante||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${r.conta||'—'}</td>
       <td class="num">${r.d||'—'}</td>
     </tr>`).join('');
   renderPag('pagSV',filteredSemVenda.length,pSV,p=>{pSV=p;renderPageSV();});
