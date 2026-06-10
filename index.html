@@ -33,16 +33,38 @@ header{display:flex;align-items:center;justify-content:space-between;padding:1.1
 .btn-green{background:var(--green);color:#0a1a12}.btn-blue{background:var(--blue);color:#05112b}
 .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}.btn-red{background:var(--red);color:#fff}
 .btn:hover{opacity:.8}.btn:disabled{opacity:.4;cursor:not-allowed}
-.nav-bar{
-  position:relative;
+/* ── DESKTOP TABS ── */
+.tabs{
+  display:flex;gap:4px;padding:.75rem 2rem;
   border-bottom:1px solid var(--border);
   background:var(--bg);
-  padding:0 2rem;
+  overflow-x:auto;scrollbar-width:none;
 }
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:6px 14px;font-size:12px;font-weight:500;
+  cursor:pointer;border:none;
+  background:transparent;
+  color:var(--muted);
+  border-radius:20px;
+  transition:all .18s;
+  font-family:'DM Sans',sans-serif;
+  white-space:nowrap;
+  letter-spacing:.2px;
+}
+.tab:hover{color:var(--text);background:var(--surface2)}
+.tab.active{
+  color:#0a1a12;
+  background:var(--green);
+  font-weight:600;
+}
+/* mobile nav */
+#mobileTabs{display:none}
+.nav-bar{position:relative;background:var(--bg);padding:.5rem 1rem;border-bottom:1px solid var(--border)}
 .nav-current{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:space-between;width:100%;
   padding:10px 16px;cursor:pointer;
-  background:var(--surface);border-radius:8px;margin:8px 0;
+  background:var(--surface);border-radius:8px;
   border:1px solid var(--border2);
   font-size:14px;font-weight:500;color:var(--text);
   user-select:none;transition:border-color .15s;
@@ -51,16 +73,16 @@ header{display:flex;align-items:center;justify-content:space-between;padding:1.1
 .nav-arrow{font-size:12px;color:var(--muted);transition:transform .2s}
 .nav-arrow.open{transform:rotate(180deg)}
 .nav-menu{
-  display:none;position:absolute;top:100%;left:2rem;right:2rem;
+  display:none;position:absolute;top:calc(100% - .5rem);left:1rem;right:1rem;
   background:var(--surface);border:1px solid var(--border2);
   border-radius:var(--rl);z-index:150;
-  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
   overflow:hidden;
 }
 .nav-menu.open{display:block}
 .nav-item{
   display:flex;align-items:center;width:100%;
-  padding:12px 16px;font-size:14px;font-weight:500;
+  padding:14px 16px;font-size:14px;font-weight:500;
   cursor:pointer;border:none;background:none;
   color:var(--muted);text-align:left;
   font-family:'DM Sans',sans-serif;
@@ -69,7 +91,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:1.1
 }
 .nav-item:last-child{border-bottom:none}
 .nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{color:var(--green);background:var(--green-dim)}
+.nav-item.active{color:var(--green);background:var(--green-dim);font-weight:600}
 .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:2rem;max-width:460px;width:90%;position:relative}
@@ -181,10 +203,8 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   #btnMobileMenu{display:inline-flex !important}
 
   /* tabs scroll horizontal */
-  .nav-bar{padding:0 .75rem}
-  .nav-current{padding:8px 12px;font-size:13px}
-  .nav-menu{left:.75rem;right:.75rem}
-  .nav-item{padding:11px 14px;font-size:13px}
+  #desktopTabs{display:none}
+  #mobileTabs{display:block}
 
   /* main */
   #main{padding:.75rem}
@@ -284,7 +304,8 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   </div>
 </header>
 
-<div class="tabs">
+<!-- DESKTOP: abas horizontais -->
+<div class="tabs" id="desktopTabs">
   <button class="tab active" onclick="switchTab('fotos',this)">📋 Cadastro</button>
   <button class="tab" onclick="switchTab('vendas',this)">✅ Vendas Realizadas</button>
   <button class="tab" onclick="switchTab('canceladas',this)">❌ Canceladas</button>
@@ -292,6 +313,23 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--muted);border-t
   <button class="tab" onclick="switchTab('desconto',this)">🏷️ Desconto por Canal</button>
   <button class="tab" onclick="switchTab('anuncios',this)">🛒 Anúncios ML</button>
   <button class="tab" onclick="switchTab('abc',this)">📊 Curva ABC</button>
+</div>
+
+<!-- MOBILE: menu suspenso -->
+<div class="nav-bar" id="mobileTabs">
+  <button class="nav-current" id="navCurrent" onclick="toggleNavMenu()">
+    <span id="navLabel">📋 Cadastro</span>
+    <span class="nav-arrow" id="navArrow">▾</span>
+  </button>
+  <div class="nav-menu" id="navMenu">
+    <button class="nav-item active" onclick="switchTabMenu('fotos',this,'📋 Cadastro')">📋 Cadastro</button>
+    <button class="nav-item" onclick="switchTabMenu('vendas',this,'✅ Vendas Realizadas')">✅ Vendas Realizadas</button>
+    <button class="nav-item" onclick="switchTabMenu('canceladas',this,'❌ Canceladas')">❌ Canceladas</button>
+    <button class="nav-item" onclick="switchTabMenu('taxacanc',this,'📉 Taxa Cancelamento')">📉 Taxa Cancelamento</button>
+    <button class="nav-item" onclick="switchTabMenu('desconto',this,'🏷️ Desconto por Canal')">🏷️ Desconto por Canal</button>
+    <button class="nav-item" onclick="switchTabMenu('anuncios',this,'🛒 Anúncios ML')">🛒 Anúncios ML</button>
+    <button class="nav-item" onclick="switchTabMenu('abc',this,'📊 Curva ABC')">📊 Curva ABC</button>
+  </div>
 </div>
 
 <!-- UPLOAD -->
