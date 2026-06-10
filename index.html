@@ -1876,21 +1876,34 @@ function procAnuncios(rows){
   const cList=keys.find(k=>/listagem/i.test(k))||'Listagem';
   const cEnv =keys.find(k=>/forma de envio/i.test(k))||'Forma de Envio';
   const cFret=keys.find(k=>/frete grátis/i.test(k))||'Frete Grátis';
-  const cAnun=keys.find(k=>/anunciante/i.test(k))||'Anunciante';
+  const cAnun =keys.find(k=>/anunciante/i.test(k))||'Anunciante';
   const cConta=keys.find(k=>/^conta$/i.test(k))||'Conta';
+  const cData =keys.find(k=>/data.*publica/i.test(k))||'Data da Publicação';
 
-  const prods=rows.map(r=>({
-    cod:      String(r[cCod]||'').trim().replace(/\.0$/,''),
-    sku:      String(r[cSku]||'').trim(),
-    mlb:      String(r[cMlb]||'').trim(),
-    titulo:   String(r[cTit]||'').trim(),
-    status:   String(r[cSt] ||'').trim(),
-    listagem: String(r[cList]||'').trim(),
-    envio:    String(r[cEnv]||'').trim(),
-    frete:    String(r[cFret]||'').trim(),
-    anunciante:String(r[cAnun]||'').trim(),
-    conta:    String(r[cConta]||'').trim(),
-  })).filter(r=>r.titulo);
+  const prods=rows.map(r=>{
+    // parse da data de publicação
+    let dStr='';
+    const rawD=r[cData];
+    if(rawD){
+      let dt;
+      if(rawD instanceof Date) dt=rawD;
+      else { const s=String(rawD).trim(); dt=new Date(s); }
+      if(!isNaN(dt)) dStr=dt.toLocaleDateString('pt-BR');
+    }
+    return {
+      d:         dStr,
+      cod:       String(r[cCod]||'').trim().replace(/\.0$/,''),
+      sku:       String(r[cSku]||'').trim(),
+      mlb:       String(r[cMlb]||'').trim(),
+      titulo:    String(r[cTit]||'').trim(),
+      status:    String(r[cSt] ||'').trim(),
+      listagem:  String(r[cList]||'').trim(),
+      envio:     String(r[cEnv]||'').trim(),
+      frete:     String(r[cFret]||'').trim(),
+      anunciante:String(r[cAnun]||'').trim(),
+      conta:     String(r[cConta]||'').trim(),
+    };
+  }).filter(r=>r.titulo);
 
   const now=ts();
   const obj={produtos:prods,updated:now};
