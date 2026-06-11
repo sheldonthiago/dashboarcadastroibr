@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none';">
 <title>Reset — Sucatão do Major</title>
 <style>
   body { font-family: sans-serif; background: #0e0f11; color: #f0f0ee; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
@@ -13,20 +15,75 @@
   .green { background: #22c48a; color: #0a1a12; }
   .muted { background: #1e2023; color: #888; border: 1px solid rgba(255,255,255,0.1); }
   #log { margin-top: 20px; font-size: 12px; color: #22c48a; font-family: monospace; text-align: left; background: #0e0f11; padding: 12px; border-radius: 8px; min-height: 60px; white-space: pre-wrap; display: none; }
+  #pinGate { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  #pinGate input { background: #1e2023; border: 2px solid rgba(255,255,255,0.15); color: #f0f0ee; padding: 10px 16px; border-radius: 8px; font-size: 20px; text-align: center; letter-spacing: 6px; width: 160px; outline: none; font-family: monospace; }
+  #pinGate input:focus { border-color: #22c48a; }
+  #pinGateErr { color: #f06060; font-size: 12px; min-height: 16px; }
+  #mainContent { display: none; }
 </style>
 </head>
 <body>
 <div class="box">
-  <h2>🗑 Reset de dados</h2>
-  <p>Use esta página para limpar os dados salvos no navegador quando o botão ⚙ do dashboard não funcionar.</p>
-  <button class="red" onclick="clearAll()">Apagar TUDO (cadastro + vendas + canceladas)</button>
-  <button class="muted" onclick="clearKey('sucatao_fotos_v2')">Apagar só Cadastro</button>
-  <button class="muted" onclick="clearKey('sucatao_vendas_v2')">Apagar só Vendas</button>
-  <button class="muted" onclick="clearKey('sucatao_canc_v1')">Apagar só Canceladas</button>
-  <button class="green" onclick="goBack()">← Voltar ao dashboard</button>
-  <div id="log"></div>
+  <h2>🔒 Reset de dados</h2>
+
+  <div id="pinGate">
+    <p style="margin-bottom:8px">Digite seu PIN para acessar esta página.</p>
+    <input id="rPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off" onkeydown="if(event.key==='Enter')checkPin()">
+    <div id="pinGateErr"></div>
+    <button class="green" onclick="checkPin()">Verificar PIN</button>
+    <button class="muted" onclick="goBack()" style="margin-top:4px">← Voltar ao dashboard</button>
+  </div>
+
+  <div id="mainContent">
+    <p>Use esta página para limpar os dados salvos no navegador quando o botão ⚙ do dashboard não funcionar.</p>
+    <button class="red" onclick="clearAll()">Apagar TUDO (cadastro + vendas + canceladas)</button>
+    <button class="muted" onclick="clearKey('sucatao_fotos_v2')">Apagar só Cadastro</button>
+    <button class="muted" onclick="clearKey('sucatao_vendas_v2')">Apagar só Vendas</button>
+    <button class="muted" onclick="clearKey('sucatao_canc_v1')">Apagar só Canceladas</button>
+    <button class="green" onclick="goBack()">← Voltar ao dashboard</button>
+    <div id="log"></div>
+  </div>
 </div>
 <script>
+// Proteção anti-iframe
+if (window !== window.top) {
+  try { window.top.location = window.location; } catch(e) { document.documentElement.innerHTML = ''; }
+}
+
+const LS_PIN = 'smj_ax_h';
+let _pinAttempts = 0, _pinLocked = false;
+
+async function _hashPin(p) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p + '__smj_v1'));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPin() {
+  if (_pinLocked) { document.getElementById('pinGateErr').textContent = 'Aguarde antes de tentar novamente.'; return; }
+  const pin = (document.getElementById('rPinInput').value || '').trim();
+  const err = document.getElementById('pinGateErr');
+  if (!pin) { err.textContent = 'Digite o PIN.'; return; }
+  const stored = localStorage.getItem(LS_PIN);
+  if (!stored) { err.textContent = 'PIN não configurado. Acesse o dashboard primeiro.'; return; }
+  const hash = await _hashPin(pin);
+  if (hash === stored) {
+    _pinAttempts = 0;
+    document.getElementById('pinGate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    showLog();
+  } else {
+    _pinAttempts++;
+    document.getElementById('rPinInput').value = '';
+    if (_pinAttempts >= 5) {
+      _pinLocked = true;
+      err.textContent = 'Muitas tentativas. Aguarde 30 segundos.';
+      setTimeout(() => { _pinLocked = false; _pinAttempts = 0; err.textContent = ''; }, 30000);
+    } else {
+      err.textContent = 'PIN incorreto. ' + (5 - _pinAttempts) + ' tentativa(s) restante(s).';
+    }
+  }
+}
+
 const log = document.getElementById('log');
 function print(msg) {
   log.style.display = 'block';
@@ -52,16 +109,11 @@ function clearKey(key) {
 function clearAll() {
   log.textContent = '';
   log.style.display = 'block';
-  const keys = ['sucatao_fotos_v2','sucatao_vendas_v2','sucatao_canc_v1','sucatao_gh_token'];
+  const keys = ['sucatao_fotos_v2', 'sucatao_vendas_v2', 'sucatao_canc_v1', 'sucatao_gh_token'];
   keys.forEach(clearKey);
-  // tenta também limpar tudo
   try {
     const total = localStorage.length;
     print('— Total de chaves no localStorage: ' + total);
-    // lista todas as chaves
-    for (let i = 0; i < localStorage.length; i++) {
-      print('  chave['+i+']: ' + localStorage.key(i));
-    }
   } catch(e) {}
   print('\nRecarregue o dashboard agora.');
 }
@@ -70,8 +122,7 @@ function goBack() {
   window.location.href = 'index.html';
 }
 
-// mostra o que tem no localStorage ao abrir
-window.onload = () => {
+function showLog() {
   try {
     print('Chaves atuais no localStorage:');
     if (localStorage.length === 0) {
@@ -80,13 +131,18 @@ window.onload = () => {
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         const v = localStorage.getItem(k);
-        const size = v ? (v.length/1024).toFixed(1)+'KB' : '0';
-        print('  '+k+' ('+size+')');
+        const size = v ? (v.length / 1024).toFixed(1) + 'KB' : '0';
+        print('  ' + k + ' (' + size + ')');
       }
     }
   } catch(e) {
     print('ERRO ao ler localStorage: ' + e.message);
   }
+}
+
+window.onload = () => {
+  const inp = document.getElementById('rPinInput');
+  if (inp) inp.focus();
 };
 </script>
 </body>
